@@ -3,7 +3,7 @@
         import socketserver
         import json
         import os
-        
+
         class Handler(http.server.SimpleHTTPRequestHandler):
             def do_GET(self):
                 if self.path == '/map_config.json':
@@ -14,7 +14,7 @@
                         self.wfile.write(f.read())
                     return
                 return http.server.SimpleHTTPRequestHandler.do_GET(self)
-        
+
         if __name__ == '__main__':
             PORT = 8000
             with socketserver.TCPServer(("", PORT), Handler) as httpd:
