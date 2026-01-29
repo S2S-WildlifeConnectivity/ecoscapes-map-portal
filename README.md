@@ -79,24 +79,25 @@ This project uses a custom icon font system for better performance and customiza
    <link rel="stylesheet" href="{% static 'fonts/custom-icons.css' %}">
    ```
 
-## Deployment to GitHub Pages
+## Deployment to GitHub Pages 
 
 1. Run the deployment script:
    ```bash
-   python deploy.py
+   python deploy_to_ecoscapes.py
    ```
    
 2. Follow the on-screen instructions to complete the GitHub Pages setup.
 
 3. Your site will be available at:
    ```
-   https://niallxd.github.io/ecoscapes-maps/sample/
+   https://s2s-wildlifeconnectivity.github.io/ecoscapes-map-portal/
    ```
 
 ## Adding New Pages
 
 1. Add a new entry to `map_config.json`
-2. Access it at: `https://niallxd.github.io/ecoscapes-maps/your-page-name/`
+2. Access it at: `https://s2s-wildlifeconnectivity.github.io/ecoscapes-map-portal/'
+`
 
 ## License
 
