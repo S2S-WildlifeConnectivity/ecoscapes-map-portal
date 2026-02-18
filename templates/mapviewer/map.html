@@ -66,6 +66,9 @@
         <button id="toggleInfoBox" class="toggle-info-btn" title="Hide Info">
           <i class="fas fa-eye-slash"></i> Hide Information Pane
         </button>
+        <button id="fullscreen" class="fullscreen-btn" title="Fullscreen">
+          <i class="fas fa-maximize"></i> View Full Screen
+        </button>
       </div>
       <div class="two-column">
         <div class="info-column">
@@ -175,6 +178,15 @@
                     if (window.map2) window.map2.invalidateSize();
                 }, 100);
             });
+            
+            // Fullscreen button functionality
+            const fullscreenBtn = document.getElementById('fullscreen');
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                    // Open current URL in the same window to break out of iframe
+                    window.top.location.href = window.location.href;
+                });
+            }
         });
         
         // Define Dropdown class first

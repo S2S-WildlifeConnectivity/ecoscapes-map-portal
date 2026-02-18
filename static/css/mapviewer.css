@@ -119,6 +119,14 @@ body, html {
   width: 200px;
 }
 
+.fullscreen-btn:hover,
+.fullscreen-btn:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+  color: var(--primary);
+  width: 165px;
+}
+
 /* Dropdowns */
 .dropdown {
   position: relative;
@@ -332,6 +340,26 @@ body, html {
 }
 
     .toggle-info-btn i {
+      font-size: 1.1em;
+    }
+
+.fullscreen-btn {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 165px;
+  padding: 10px 16px;
+  margin-left: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95em;
+  color: var(--text);
+  transition: var(--transition);
+}
+
+    .fullscreen-btn i {
       font-size: 1.1em;
     }
 
