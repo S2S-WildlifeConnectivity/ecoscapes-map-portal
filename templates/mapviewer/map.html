@@ -457,6 +457,14 @@
                 if (currentSubtheme) params.set('subtheme', currentSubtheme.id);
                 if (currentIndicator) params.set('indicator', currentIndicator.id);
                 
+                // Debug logging
+                console.log('updateURL called:', {
+                    currentTheme: currentTheme?.id,
+                    currentSubtheme: currentSubtheme?.id,
+                    currentIndicator: currentIndicator?.id,
+                    paramsString: params.toString()
+                });
+                
                 const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
                 window.history.pushState({}, '', newUrl);
             }
@@ -707,6 +715,9 @@
                 }
                 
                 closeAllDropdowns();
+                
+                // Update URL with current selection
+                updateURL();
             }
 
             // Subtheme selected
@@ -774,7 +785,9 @@
                 
                 // Clear and populate indicators
                 indicatorMenu.innerHTML = '';
+                console.log('Populating indicators for subtheme:', subtheme.name, 'indicators:', subtheme.indicators);
                 subtheme.indicators.forEach(indicator => {
+                    console.log('Creating dropdown item for indicator:', indicator.title, 'id:', indicator.id);
                     const item = createDropdownItem(indicator.title, indicator.icon.replace('fa-', ''), (e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -794,6 +807,9 @@
                 if (currentTheme) {
                     updateThemeInfo(currentTheme);
                 }
+                
+                // Update URL with current selection
+                updateURL();
             }
 
             // Find theme by ID
@@ -803,6 +819,7 @@
 
             // Indicator selected
             function selectIndicator(indicator) {
+                console.log('selectIndicator called with:', indicator);
                 currentIndicator = indicator;
                 
                 // Update indicator button
@@ -868,6 +885,7 @@
                 const mapPlaceholder = document.getElementById('mapPlaceholder');
                 
                 if (indicator && indicator.map1_url) {
+                    console.log('Loading map with URL:', indicator.map1_url);
                     // Get the loading spinner
                     const loadingSpinner = document.getElementById('loadingSpinner');
                     
@@ -898,29 +916,34 @@
                     
                     // Set up map2 if URL exists
                     if (indicator.map2_url) {
+                        console.log('Setting up map2 with URL:', indicator.map2_url);
                         map2.onload = function() {
                             // Additional map2 loaded logic if needed
                         };
                         map2.src = indicator.map2_url;
                         map2.style.display = 'none'; // Will be shown when toggled
                     } else {
+                        console.log('No map2_url found for this indicator');
                         map2.style.display = 'none';
                     }
                     
+                    console.log('About to set active view and call updateURL');
                     // Set active view to explore
                     if (exploreLabel) exploreLabel.classList.add('active');
                     if (analyzeLabel) analyzeLabel.classList.remove('active');
-                    if (toggleSwitch) toggleSwitch.checked = false;
+                    if (viewToggle) viewToggle.checked = false;
                     currentView = 'explore';
                 } else {
+                    console.log('No map1_url found for this indicator');
                     // No map URL, show placeholder
                     mapPlaceholder.style.display = 'flex';
                     map1.style.display = 'none';
                     map2.style.display = 'none';
                 }
                 
-                // Update URL without page reload
-                window.history.pushState({}, '', indicator.url);
+                console.log('About to call updateURL from selectIndicator');
+                // Update URL with current selection
+                updateURL();
                 
                 // Close all dropdowns
                 if (window.Dropdown) {
@@ -1170,7 +1193,7 @@
                     map2.style.display = 'none';
                     exploreLabel.classList.add('active');
                     analyzeLabel.classList.remove('active');
-                    toggleSwitch.checked = false;
+                    viewToggle.checked = false;
                     currentView = 'explore';
                 } else {
                     // Show map2, hide map1
@@ -1178,12 +1201,12 @@
                     map2.style.display = 'block';
                     exploreLabel.classList.remove('active');
                     analyzeLabel.classList.add('active');
-                    toggleSwitch.checked = true;
+                    viewToggle.checked = true;
                     currentView = 'analyze';
                 }
             }
 
-            toggleSwitch.addEventListener('change', function() {
+            viewToggle.addEventListener('change', function() {
                 if (this.checked) {
                     switchView('analyze');
                 } else {
