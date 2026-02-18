@@ -190,8 +190,8 @@
             const fullscreenBtn = document.getElementById('fullscreen');
             if (fullscreenBtn) {
                 fullscreenBtn.addEventListener('click', () => {
-                    // Open current URL in the same window to break out of iframe
-                    window.top.location.href = window.location.href;
+                    // Open current URL in a new tab to break out of iframe
+                    window.open(window.location.href, '_blank');
                 });
             }
         });
