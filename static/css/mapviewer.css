@@ -11,6 +11,9 @@
   --text-light: #64748b;
   --border: #e2e8f0;
   --bg-hover: #f8f9fa;
+  --bg-main: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --shadow-color: rgba(0,0,0,0.1);
   
   /* Spacing */
   --spacing-xs: 4px;
@@ -32,6 +35,23 @@
   --transition: all 0.2s ease;
 }
 
+/* Dark Mode Variables */
+[data-theme="dark"] {
+  --primary: #66bb6a;
+  --primary-dark: #4caf50;
+  --primary-light: #1b5e20;
+  --white: #1a1a1a;
+  --text: #ffffff;
+  --text-light: #cccccc;
+  --border: #404040;
+  --bg-hover: #2a2a2a;
+  --bg-main: #121212;
+  --bg-secondary: #1e1e1e;
+  --shadow-color: rgba(0,0,0,0.3);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
 /* Base Styles */
 *,
 *::before,
@@ -50,6 +70,8 @@ body, html {
   color: var(--text);
   font-size: var(--font-size-md);
   line-height: 1.5;
+  background-color: var(--bg-main);
+  transition: background-color var(--transition), color var(--transition);
 }
 
 /* =================================
@@ -116,7 +138,124 @@ body, html {
   border-color: var(--primary);
   background-color: var(--bg-hover);
   color: var(--primary);
-  width: 200px;
+}
+
+.reset-filters-btn {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-left: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95em;
+  color: var(--text);
+  transition: var(--transition);
+  min-width: auto;
+  width: auto;
+}
+
+.reset-filters-btn:hover,
+.reset-filters-btn:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+.reset-filters-btn i {
+  font-size: 1.1em;
+}
+
+.help-modal-btn {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-left: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95em;
+  color: var(--text);
+  transition: var(--transition);
+  min-width: auto;
+  width: auto;
+}
+
+.help-modal-btn:hover,
+.help-modal-btn:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+.help-modal-btn i {
+  font-size: 1.1em;
+}
+
+.dark-mode-toggle {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-left: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95em;
+  color: var(--text);
+  transition: var(--transition);
+  min-width: auto;
+  width: auto;
+}
+
+.dark-mode-toggle:hover,
+.dark-mode-toggle:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+.dark-mode-toggle i {
+  font-size: 1.1em;
+}
+
+.toolbar-buttons-right {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.view-mode-btn {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-left: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95em;
+  color: var(--text);
+  transition: var(--transition);
+  min-width: auto;
+  width: auto;
+}
+
+.view-mode-btn:hover,
+.view-mode-btn:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+.view-mode-btn i {
+  font-size: 1.1em;
 }
 
 .fullscreen-btn:hover,
@@ -124,7 +263,6 @@ body, html {
   border-color: var(--primary);
   background-color: var(--bg-hover);
   color: var(--primary);
-  width: 165px;
 }
 
 /* Dropdowns */
@@ -232,7 +370,7 @@ body, html {
 
 .dropdown-item i {
   width: 20px;
-  margin-right: var(--spacing-sm);
+  margin-right: 5px;
   color: var(--primary);
   text-align: center;
 }
@@ -285,6 +423,153 @@ body, html {
 }
 
 /* =================================
+   Modal Components
+   ================================= */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  position: relative;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 800px;
+  z-index: 10001;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: var(--font-size-lg);
+  color: var(--text-light);
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text);
+}
+
+.modal-body {
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-body h1, .modal-body h2, .modal-body h3 {
+  color: var(--text);
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.modal-body p {
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-md);
+}
+
+.modal-body code {
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.modal-body pre {
+  background: var(--bg-secondary);
+  padding: var(--spacing-md);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  margin-bottom: var(--spacing-md);
+}
+
+.modal-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.modal-body ul, .modal-body ol {
+  margin-left: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  color: var(--text);
+}
+
+.modal-body blockquote {
+  border-left: 4px solid var(--primary);
+  padding-left: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95vw;
+    max-height: 95vh;
+  }
+  
+  .modal-header {
+    padding: var(--spacing-md);
+  }
+  
+  .modal-body {
+    padding: var(--spacing-md);
+  }
+}
+
+/* =================================
    Responsive Styles
    ================================= */
 @media (max-width: 768px) {
@@ -327,16 +612,22 @@ body, html {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  width: 200px;
-  padding: 10px 16px;
+  padding: 10px 12px;
   margin-left: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   font-size: 0.95em;
   color: var(--text);
   transition: var(--transition);
+  min-width: auto;
+  width: auto;
+}
+
+.toggle-info-btn.collapsed i {
+  color: var(--text-light);
+  opacity: 0.5;
 }
 
     .toggle-info-btn i {
@@ -347,16 +638,17 @@ body, html {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  width: 165px;
-  padding: 10px 16px;
+  padding: 10px 12px;
   margin-left: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   font-size: 0.95em;
   color: var(--text);
   transition: var(--transition);
+  min-width: auto;
+  width: auto;
 }
 
     .fullscreen-btn i {
@@ -429,10 +721,10 @@ body, html {
 
     /* Dropdown Toggle Button */
     .dropdown-toggle {
-        background-color: #ffffff;
-        color: #2c3e50;
+        background-color: var(--white);
+        color: var(--text);
         padding: 10px 16px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-radius: 8px;
         cursor: pointer;
         min-width: 220px;
@@ -443,7 +735,7 @@ body, html {
         justify-content: space-between;
         align-items: center;
         transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: var(--shadow-sm);
         user-select: none;
     }
     /* Dropdown Menu */
@@ -452,15 +744,15 @@ body, html {
         position: absolute;
         top: 100%;
         left: 0;
-        background-color: white;
+        background-color: var(--white);
         min-width: 240px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        box-shadow: var(--shadow);
         border-radius: 8px;
         z-index: 1000;
         max-height: 400px;
         overflow-y: auto;
         margin-top: 4px;
-        border: 1px solid #e9ecef;
+        border: 1px solid var(--border);
         opacity: 0;
         transform: translateY(10px);
         transition: opacity 0.15s ease, transform 0.15s ease;
@@ -476,26 +768,28 @@ body, html {
 
     /* Dropdown Menu Items */
     .dropdown-menu a {
-        color: #2c3e50;
+        color: var(--text);
         padding: 10px 16px;
         text-decoration: none;
         display: block;
-        border-bottom: 1px solid #f1f3f5;
+        border-bottom: 1px solid var(--border);
         transition: all 0.15s ease;
         font-size: 14px;
     }
 
-    .dropdown-menu a:hover,
-    .dropdown-menu a:focus {
-        background-color: #f8f9fa;
-        color: #4CAF50;
+    .dropdown-menu a:hover {
+        background-color: var(--bg-hover);
+        color: var(--primary);
     }
-
-    .dropdown-menu a.active {
-        background-color: #e8f5e9;
-        color: #2e7d32;
-        font-weight: 500;
-        border-left: 3px solid #4CAF50;
+    
+    .dropdown-menu a:focus {
+        outline: none;
+    }
+    
+    /* Ensure only actually hovered items get hover styling */
+    .dropdown-menu a:not(:hover) {
+        background-color: transparent;
+        color: var(--text);
     }
 
     /* Dropdown Submenu */
@@ -505,9 +799,9 @@ body, html {
         left: 100%;
         top: 0;
         min-width: 200px;
-        background: white;
+        background: var(--white);
         border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        box-shadow: var(--shadow);
         z-index: 1001;
     }
 
@@ -574,17 +868,17 @@ body, html {
     .toggle-label {
         font-size: 14px;
         font-weight: 500;
-        color: #64748b;
+        color: var(--text-light);
         transition: all 0.2s ease;
         line-height: 1;
     }
 
     .toggle-label.active {
-        color: #166534;
+        color: var(--primary-dark);
     }
 
     .time-series-note {
-        color: #6b7280;
+        color: var(--text-light);
         font-size: 12px;
         margin: 0 0 8px 0;
         text-align: center;
@@ -660,9 +954,10 @@ body, html {
         margin-left: 10px;
         margin-right: 10px;
         padding: 15px 20px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        background-color: #ffffff;
+        box-shadow: var(--shadow);
+        background-color: var(--white);
         border-radius: 20px;
+        transition: background-color var(--transition);
     }
 
     /* ===== Info Box Components ===== */
@@ -684,11 +979,12 @@ body, html {
         min-width: 0;
         display: flex;
         flex-direction: column;
-        background: white;
+        background: var(--white);
         border-radius: 20px;
         padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: var(--shadow);
         box-sizing: border-box;
+        transition: background-color var(--transition);
     }
 
     .map-column {
@@ -711,7 +1007,8 @@ body, html {
       margin: 0;
       box-shadow: var(--shadow);
       border-radius: 20px;
-      background: white;
+      background: var(--white);
+      transition: background-color var(--transition);
     }
 
 
@@ -791,21 +1088,21 @@ body, html {
         /* Icon Base Styles */
         .indicator-icon,
         .theme-icon,
-        .subtheme-icon { /* Increased size */
-          font-size: 4em;
+        .subtheme-icon {
+          font-size: 16rem;
           color: #4CAF5026;
           margin: 0;
           display: flex;
-          align-items: flex-start; /* Align to top */
+          align-items: center;
           justify-content: center;
           transition: all 0.2s ease;
           opacity: 1;
-          width: 60px;           /* Increased width */
-          height: 70px;          /* Increased height to allow overflow */
-          margin-top: 0px;     /* Pull up slightly into the header */
-          margin-right: 95px;    /* Pull right slightly */
-          position: relative;    /* For z-index */
-          z-index: 1;            /* Ensure icon stays above other elements */
+          width: auto;
+          height: auto;
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          z-index: 0;
         }
 
 
@@ -813,33 +1110,24 @@ body, html {
         .indicator-icon i,
         .theme-icon i,
         .subtheme-icon i {
-            font-size: 4em;
-            line-height: 0;
+            font-size: 1em;
+            line-height: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .subtheme-icon i::before {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
         }
 
     /* Hover Effects */
     .indicator-info:hover .indicator-icon,
     .theme-info:hover .theme-icon,
     .subtheme-info:hover .subtheme-icon {
-        opacity: 1;
-        font-size: 54px;
+        font-size: 16.5em;
     }
 
     /* Title Styles */
     .indicator-title, .theme-title, .subtheme-title {
         margin: 0; /* needed to override the h2 styles */
-        color: #1a365d;
+        color: var(--text);
         font-size: 1.5em;
         font-weight: 600;
         line-height: 1.3;
@@ -847,7 +1135,7 @@ body, html {
     /* Description Styles */
     .indicator-description, .theme-description, .subtheme-description {
         margin: 0;
-        color: #4a5568;
+        color: var(--text-light);
         line-height: 1.6;
         font-size: 0.95em;
         max-width: 100%;
@@ -888,7 +1176,7 @@ body, html {
         align-items: center;
         text-align: center;
         margin-top: 150px;
-        color: #4a5568;
+        color: var(--text-light);
         width: 100%;
         height: 100%;
     }
@@ -900,29 +1188,29 @@ body, html {
 
     .placeholder-content i {
         font-size: 3em;
-        color: #4CAF50;
+        color: var(--primary);
         margin-bottom: 1.5rem;
     }
 
     .placeholder-content h3 {
-        color: #2d3748;
+        color: var(--text);
         margin-bottom: 1rem;
         font-size: 1.5rem;
         font-weight: 600;
     }
 
     .placeholder-content p {
-        color: #718096;
+        color: var(--text-light);
         line-height: 1.6;
         margin: 0;
     }
 
     /* Dropdown Styling */
     .dropdown-toggle {
-        background-color: #ffffff;
-        color: #2c3e50;
+        background-color: var(--white);
+        color: var(--text);
         padding: 10px 16px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-radius: 8px;
         cursor: pointer;
         min-width: 220px;
@@ -952,15 +1240,15 @@ body, html {
     .dropdown-menu {
         display: none;
         position: absolute;
-        background-color: white;
+        background-color: var(--white);
         min-width: 240px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        box-shadow: var(--shadow);
         border-radius: 8px;
         z-index: 1000;
         max-height: 400px;
         overflow-y: auto;
         margin-top: 4px;
-        border: 1px solid #e9ecef;
+        border: 1px solid var(--border);
     }
     .dropdown.active .dropdown-menu {
         display: block;
@@ -969,10 +1257,10 @@ body, html {
 
     /* Remove duplicate dropdown styles */
     .dropdown-toggle {
-        background-color: #ffffff;
-        color: #2c3e50;
+        background-color: var(--white);
+        color: var(--text);
         padding: 10px 16px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-radius: 8px;
         cursor: pointer;
         width: 100%;
@@ -983,17 +1271,17 @@ body, html {
         justify-content: space-between;
         align-items: center;
         transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: var(--shadow-sm);
         user-select: none;
         box-sizing: border-box;
     }
     .dropdown-toggle:hover {
-        border-color: #4CAF50;
-        background-color: #f8fafc;
+        border-color: var(--primary);
+        background-color: var(--bg-hover);
     }
     .dropdown-toggle:focus {
         outline: none;
-        border-color: #4CAF50;
+        border-color: var(--primary);
         box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
     }
     .dropdown-toggle i {
@@ -1007,15 +1295,15 @@ body, html {
     .dropdown-menu {
         display: none;
         position: absolute;
-        background-color: white;
+        background-color: var(--white);
         min-width: 240px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        box-shadow: var(--shadow);
         border-radius: 8px;
         z-index: 1000;
         max-height: 400px;
         overflow-y: auto;
         margin-top: 4px;
-        border: 1px solid #e9ecef;
+        border: 1px solid var(--border);
         opacity: 0;
         transform: translateY(-10px);
         transition: opacity 0.15s ease-out, transform 0.15s ease-out;
@@ -1032,11 +1320,11 @@ body, html {
     }
     /* Remove fadeIn keyframes as we're using CSS transitions now */
     .dropdown-menu a {
-        color: #2c3e50;
+        color: var(--text);
         padding: 10px 16px;
         text-decoration: none;
         display: block;
-        border-bottom: 1px solid #f1f3f5;
+        border-bottom: 1px solid var(--border);
         transition: all 0.15s ease;
         font-size: 14px;
     }

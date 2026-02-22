@@ -50,25 +50,26 @@
             <!-- Will be populated by JavaScript -->
           </div>
         </div>
-
-        <div class="toggle-container">
-          <p class="time-series-note">Note: Not all indicators have time-series data.</p>
-          <div class="toggle-wrapper">
-            <span id="exploreLabel" class="toggle-label active">Explore</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="viewToggle">
-              <span class="toggle-slider"></span>
-            </label>
-            <span id="analyzeLabel" class="toggle-label">Analyze</span>
-          </div>
+        <div class="toolbar-buttons-right">
+          <button id="resetFilters" class="reset-filters-btn" data-tooltip="Reset All Filters">
+            <i class="fas fa-undo"></i>
+          </button>
+          <button id="viewModeToggle" class="view-mode-btn" data-tooltip="Switch to Analyze Mode">
+            <i class="fas fa-binoculars"></i>
+          </button>
+          <button id="toggleInfoBox" class="toggle-info-btn" data-tooltip="Hide Information Pane">
+            <i class="fas fa-info-circle"></i>
+          </button>
+          <button id="fullscreen" class="fullscreen-btn" data-tooltip="Open Full Screen in new tab">
+            <i class="fas fa-maximize"></i>
+          </button>
+          <button id="helpModal" class="help-modal-btn" data-tooltip="Help & Documentation">
+            <i class="fas fa-question-circle"></i>
+          </button>
+          <button id="darkModeToggle" class="dark-mode-toggle" data-tooltip="Toggle Dark Mode">
+            <i class="fas fa-moon"></i>
+          </button>
         </div>
-        
-        <button id="toggleInfoBox" class="toggle-info-btn" title="Hide Info">
-          <i class="fas fa-eye-slash"></i> Hide Information Pane
-        </button>
-        <button id="fullscreen" class="fullscreen-btn" title="Fullscreen">
-          <i class="fas fa-maximize"></i> View Full Screen
-        </button>
       </div>
       <div class="two-column">
         <div class="info-column">
@@ -137,6 +138,75 @@
       </div>
 
       <script>
+        // Global tooltip reference for theme switching
+        let currentTooltip = null;
+        
+        // Dark Mode Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const htmlElement = document.documentElement;
+            
+            // Check for saved theme preference or default to light mode
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            
+            // Apply the saved theme on page load
+            if (currentTheme === 'dark') {
+                htmlElement.setAttribute('data-theme', 'dark');
+                updateDarkModeToggle(true);
+            } else {
+                htmlElement.removeAttribute('data-theme');
+                updateDarkModeToggle(false);
+            }
+            
+            // Toggle dark mode
+            darkModeToggle.addEventListener('click', function() {
+                const isDark = htmlElement.getAttribute('data-theme') === 'dark';
+                
+                if (isDark) {
+                    htmlElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                    updateDarkModeToggle(false);
+                } else {
+                    htmlElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    updateDarkModeToggle(true);
+                }
+            });
+            
+            // Update toggle button appearance
+            function updateDarkModeToggle(isDark) {
+                const icon = darkModeToggle.querySelector('i');
+                
+                if (isDark) {
+                    icon.className = 'fas fa-sun';
+                    darkModeToggle.setAttribute('data-tooltip', 'Switch to Light Mode');
+                } else {
+                    icon.className = 'fas fa-moon';
+                    darkModeToggle.setAttribute('data-tooltip', 'Toggle Dark Mode');
+                }
+                
+                // Update any active tooltip immediately
+                if (currentTooltip) {
+                    currentTooltip.textContent = darkModeToggle.getAttribute('data-tooltip');
+                    
+                    // Update colors for theme - FIXED: match app theme
+                    if (isDark) {
+                        // Dark mode: dark background, white text
+                        currentTooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                        currentTooltip.style.color = 'white';
+                        currentTooltip.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+                        currentTooltip.style.border = '1px solid var(--border)';
+                    } else {
+                        // Light mode: light background, dark text
+                        currentTooltip.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                        currentTooltip.style.color = '#333';
+                        currentTooltip.style.boxShadow = '0 2px 8px rgba(255, 255, 255, 0.1)';
+                        currentTooltip.style.border = '1px solid var(--border)';
+                    }
+                }
+            }
+        });
+        
         // Toggle info box functionality
         document.addEventListener('DOMContentLoaded', function() {
             const toggleInfoBox = document.getElementById('toggleInfoBox');
@@ -150,12 +220,22 @@
                 // Toggle the 'collapsed' class on the two-column layout
                 twoColumnLayout.classList.toggle('collapsed');
                 
-                // Toggle between chevron icons and update the tooltip
+                // Toggle between filled/unfilled icons and update tooltip
                 const isCollapsed = twoColumnLayout.classList.contains('collapsed');
-                const iconClass = isCollapsed ? 'fa-eye' : 'fa-eye-slash';
-                toggleIcon.className = `fas ${iconClass}`;
-                toggleInfoBox.title = isCollapsed ? 'Show Info' : 'Hide Info';
-                toggleInfoBox.innerHTML = `<i class="fas ${iconClass}"></i> ${isCollapsed ? 'Show' : 'Hide'} Information Pane`;
+                if (isCollapsed) {
+                    toggleIcon.className = 'far fa-info-circle';
+                    toggleInfoBox.classList.add('collapsed');
+                    toggleInfoBox.setAttribute('data-tooltip', 'Show Information Pane');
+                } else {
+                    toggleIcon.className = 'fas fa-info-circle';
+                    toggleInfoBox.classList.remove('collapsed');
+                    toggleInfoBox.setAttribute('data-tooltip', 'Hide Information Pane');
+                }
+                
+                // Update tooltip text immediately if visible
+                if (currentTooltip && currentTooltip.textContent.includes('Information Pane')) {
+                    currentTooltip.textContent = toggleInfoBox.getAttribute('data-tooltip');
+                }
                 
                 // Force map resize after a small delay to ensure the container has resized
                 const resizeMaps = () => {
@@ -368,27 +448,315 @@
                 dropdown._dropdownInstance = new Dropdown(dropdown);
             });
             
-            // Handle map toggle functionality
-            const viewToggle = document.getElementById('viewToggle');
+            // Reset filters functionality
+            const resetFiltersBtn = document.getElementById('resetFilters');
+            resetFiltersBtn.addEventListener('click', function() {
+                // Reset all selections
+                currentTheme = null;
+                currentSubtheme = null;
+                currentIndicator = null;
+                
+                // Reset dropdowns
+                updateButton(themeDropdown, 'Select Theme', 'folder');
+                updateButton(subthemeDropdown, 'Select Sub-theme', 'folder');
+                updateButton(indicatorDropdown, 'Select Indicator', 'folder');
+                
+                // Hide subtheme and indicator dropdowns
+                document.getElementById('subthemeDropdown').style.display = 'none';
+                document.getElementById('indicatorDropdown').style.display = 'none';
+                
+                // Reset info boxes
+                resetInfoBox('.theme-info', 'theme');
+                resetInfoBox('.subtheme-info', 'subtheme');
+                resetInfoBox('.indicator-info', 'indicator');
+                
+                // Reset maps
+                const map1 = document.getElementById('map1');
+                const map2 = document.getElementById('map2');
+                const mapPlaceholder = document.getElementById('mapPlaceholder');
+                if (mapPlaceholder && map1 && map2) {
+                    mapPlaceholder.style.display = 'flex';
+                    map1.style.display = 'none';
+                    map2.style.display = 'none';
+                    map1.src = '';
+                    map2.src = '';
+                }
+                
+                // Update URL
+                updateURL();
+            });
+            
+            // Modal functionality
+            const modal = document.getElementById('markdownModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+            const closeModalBtn = document.getElementById('closeModal');
+            
+            // Function to show modal with markdown content
+            function showModal(title, markdownContent) {
+                modalTitle.textContent = title;
+                modalContent.innerHTML = parseMarkdown(markdownContent);
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // Function to hide modal
+            function hideModal() {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+            
+            // Simple markdown parser
+            function parseMarkdown(markdown) {
+                let html = markdown;
+                
+                // Headers
+                html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+                html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+                html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+                
+                // Bold
+                html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                
+                // Italic
+                html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+                
+                // Links
+                html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+                
+                // Code blocks
+                html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+                
+                // Inline code
+                html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+                
+                // Line breaks
+                html = html.replace(/\n\n/g, '</p><p>');
+                html = '<p>' + html + '</p>';
+                
+                // Lists (basic)
+                html = html.replace(/^\* (.+)$/gim, '<li>$1</li>');
+                html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+                
+                // Blockquotes
+                html = html.replace(/^> (.+)$/gim, '<blockquote>$1</blockquote>');
+                
+                return html;
+            }
+            
+            // Close modal events
+            closeModalBtn.addEventListener('click', hideModal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal || e.target.classList.contains('modal-backdrop')) {
+                    hideModal();
+                }
+            });
+            
+            // Escape key to close modal
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('show')) {
+                    hideModal();
+                }
+            });
+            
+            // Make showModal function globally accessible
+            window.showModal = showModal;
+            
+            // Custom tooltip positioning
+            const tooltipElements = document.querySelectorAll('[data-tooltip]');
+            
+            tooltipElements.forEach(element => {
+                element.addEventListener('mouseenter', function(e) {
+                    // Remove any existing tooltip immediately
+                    if (currentTooltip && currentTooltip.parentNode) {
+                        currentTooltip.parentNode.removeChild(currentTooltip);
+                        currentTooltip = null;
+                    }
+                    
+                    const tooltipText = this.getAttribute('data-tooltip');
+                    
+                    // Create tooltip
+                    const tooltipBox = document.createElement('div');
+                    tooltipBox.className = 'tooltip-active';
+                    tooltipBox.textContent = tooltipText;
+                    tooltipBox.style.cssText = `
+                        position: fixed;
+                        background-color: rgba(255, 255, 255, 0.95);
+                        color: #333;
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        font-weight: 500;
+                        white-space: nowrap;
+                        pointer-events: none;
+                        z-index: 10000;
+                        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+                        border: 1px solid var(--border);
+                        transform: translate(-50%, 0);
+                        opacity: 0;
+                        transition: opacity 0.1s ease;
+                    `;
+                    
+                    // Check for dark mode
+                    if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                        // Dark mode: dark background, white text
+                        tooltipBox.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                        tooltipBox.style.color = 'white';
+                        tooltipBox.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+                        tooltipBox.style.border = '1px solid var(--border)';
+                    }
+                    
+                    document.body.appendChild(tooltipBox);
+                    currentTooltip = tooltipBox;
+                    
+                    // Position and show immediately
+                    function positionTooltip(e) {
+                        if (currentTooltip) {
+                            currentTooltip.style.left = e.pageX + 'px';
+                            currentTooltip.style.top = (e.pageY - 40) + 'px';
+                        }
+                    }
+                    
+                    positionTooltip(e);
+                    setTimeout(() => {
+                        if (currentTooltip) {
+                            currentTooltip.style.opacity = '1';
+                        }
+                    }, 10);
+                    
+                    // Update position on mouse move
+                    element.addEventListener('mousemove', positionTooltip);
+                });
+                
+                element.addEventListener('mouseleave', function() {
+                    // Remove tooltip immediately
+                    if (currentTooltip && currentTooltip.parentNode) {
+                        currentTooltip.parentNode.removeChild(currentTooltip);
+                        currentTooltip = null;
+                    }
+                });
+            });
+            
+            // Help modal button functionality
+            const helpModalBtn = document.getElementById('helpModal');
+            helpModalBtn.addEventListener('click', function() {
+                // Load help content from external markdown file
+                fetch('/static/help.md')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to load help content');
+                        }
+                        return response.text();
+                    })
+                    .then(markdownContent => {
+                        showModal('Help & Documentation', markdownContent);
+                    })
+                    .catch(error => {
+                        console.error('Error loading help content:', error);
+                        // Fallback content if file fails to load
+                        const fallbackContent = `# Help Documentation
+
+## Unable to Load Help Content
+
+Sorry, we couldn't load the complete help documentation. Please try again later or contact support.
+
+## Basic Usage
+
+1. **Select a Theme** from the first dropdown
+2. **Choose a Sub-theme** from the second dropdown  
+3. **Pick an Indicator** from the third dropdown
+
+## Toolbar Buttons
+
+- **Reset Filters** - Clear all selections
+- **View Mode** - Switch map modes
+- **Toggle Info Panel** - Show/hide side panel
+- **Fullscreen** - Enter fullscreen mode
+- **Dark Mode** - Toggle theme
+
+If you continue to experience issues, please refresh the page or contact support.`;
+                        
+                        showModal('Help & Documentation', fallbackContent);
+                    });
+            });
+            
+            // =================================
+           // Utility Functions
+           // =================================
+           
+           // Get normalized icon class for any item type
+           function getIconClass(icon) {
+               if (!icon || !icon.trim()) return 'icon-question';
+               
+               // Handle themes: icon-icon-xxx → icon-xxx
+               if (icon.startsWith('icon-icon-')) {
+                   return icon.replace('icon-', '');
+               }
+               
+               // Handle subthemes/indicators: icon-xxx → icon-xxx
+               return icon;
+           }
+           
+           // Reset info box to proper default state
+           function resetInfoBox(selector, type) {
+               const element = document.querySelector(selector);
+               if (!element) return;
+               
+               const defaultTitles = {
+                   'theme': 'Select a Theme',
+                   'subtheme': 'Select a Sub-theme', 
+                   'indicator': 'Select an Indicator'
+               };
+               
+               const defaultDescriptions = {
+                   'theme': 'Choose a theme from the dropdown to view its details.',
+                   'subtheme': 'Choose a sub-theme from the dropdown above to view its details.',
+                   'indicator': 'Choose an indicator from the dropdown above to view its details and map.'
+               };
+               
+               element.innerHTML = `
+                   <div class="info-box-header">
+                       <div class="info-box-title">${type.charAt(0).toUpperCase() + type.slice(1)} Information</div>
+                       <div class="${type}-icon">
+                           <i class="icon icon-question"></i>
+                       </div>
+                   </div>
+                   <div class="text-content">
+                       <h2 class="${type}-title">${defaultTitles[type]}</h2>
+                       <p class="${type}-description">${defaultDescriptions[type]}</p>
+                   </div>`;
+           }
+
+            // Handle view mode toggle functionality
+            const viewModeToggle = document.getElementById('viewModeToggle');
             const map1 = document.getElementById('map1');
             const map2 = document.getElementById('map2');
-            const exploreLabel = document.getElementById('exploreLabel');
-            const analyzeLabel = document.getElementById('analyzeLabel');
+            let isExploreMode = true;
 
-            viewToggle.addEventListener('change', function() {
-                if (this.checked) {
-                    // Switch to map2 (Analyze view)
+            viewModeToggle.addEventListener('click', function() {
+                const toggleIcon = viewModeToggle.querySelector('i');
+                
+                if (isExploreMode) {
+                    // Switch to analyze mode
                     map1.style.display = 'none';
                     map2.style.display = 'block';
-                    exploreLabel.classList.remove('active');
-                    analyzeLabel.classList.add('active');
+                    toggleIcon.className = 'fas fa-arrow-trend-up';
+                    viewModeToggle.setAttribute('data-tooltip', 'Switch to Explore Mode');
                 } else {
-                    // Switch to map1 (Explore view)
+                    // Switch to explore mode
                     map1.style.display = 'block';
                     map2.style.display = 'none';
-                    exploreLabel.classList.add('active');
-                    analyzeLabel.classList.remove('active');
+                    toggleIcon.className = 'fas fa-binoculars';
+                    viewModeToggle.setAttribute('data-tooltip', 'Switch to Analyze Mode');
                 }
+                
+                // Update tooltip text immediately if visible
+                if (currentTooltip && (currentTooltip.textContent.includes('Explore') || currentTooltip.textContent.includes('Analyze'))) {
+                    currentTooltip.textContent = viewModeToggle.getAttribute('data-tooltip');
+                }
+                
+                isExploreMode = !isExploreMode;
             });
 
             // Get all themes data from the template
@@ -397,6 +765,7 @@
                 {
                     id: '{{ theme.id|escapejs }}',
                     name: '{{ theme.name|escapejs }}',
+                    icon: '{{ theme.icon|default:''|escapejs }}',
                     subthemes: [
                         {% for subtheme in theme.subthemes %}
                         {
@@ -519,11 +888,19 @@
 
             // Initialize dropdowns and load state from URL
             function initDropdowns() {
+                console.log('initDropdowns called');
+                console.log('themesData:', themesData);
+                console.log('Number of themes:', themesData.length);
+                
                 // Load state from URL after a short delay to ensure DOM is ready
                 setTimeout(loadStateFromURL, 100);
                 // Populate themes
-                themesData.forEach(theme => {
-                    const item = createDropdownItem(theme.name, 'folder', () => {
+                themesData.forEach((theme, index) => {
+                    console.log(`Theme ${index}:`, theme.name, 'Icon:', theme.icon, 'Icon type:', typeof theme.icon);
+                    // Use the same logic as the theme info box: getIconClass(theme.icon)
+                    const themeIcon = getIconClass(theme.icon);
+                    console.log('Using theme icon:', themeIcon);
+                    const item = createDropdownItem(theme.name, themeIcon, () => {
                         selectTheme(theme);
                     });
                     themeMenu.appendChild(item);
@@ -556,7 +933,12 @@
                 const item = document.createElement('a');
                 item.href = '#';
                 item.className = 'dropdown-item';
+                
+                console.log('Creating dropdown item:', text, 'Icon:', icon);
+                
+                // Use the same structure as info boxes: <i class="icon [icon-class]"></i>
                 item.innerHTML = `
+                    <i class="icon ${icon}"></i>
                     <span>${text}</span>
                 `;
                 item.addEventListener('click', (e) => {
@@ -599,7 +981,7 @@
                         <div class="info-box-header">
                             <div class="info-box-title">Theme Information</div>
                             <div class="theme-icon">
-                                <i class="icon fas fa-map-marked-alt"></i>
+                                <i class="icon icon-question"></i>
                             </div>
                         </div>
                         <div class="text-content">
@@ -610,16 +992,16 @@
                 }
                 
                 themeInfo.innerHTML = `
-                    <div class="info-box-header">
-                        <div class="info-box-title">Theme Information</div>
-                        <div class="theme-icon">
-                            <i class="icon ${theme.icon || 'fa-map-marked-alt'}"></i>
+                        <div class="info-box-header">
+                            <div class="info-box-title">Theme Information</div>
+                            <div class="theme-icon">
+                                <i class="icon ${getIconClass(theme.icon)}"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="text-content">
-                        <h2 class="theme-title">${theme.name}</h2>
-                        <p class="theme-description">${theme.description}</p>
-                    </div>`;
+                        <div class="text-content">
+                            <h2 class="theme-title">${theme.name}</h2>
+                            <p class="theme-description">${theme.description}</p>
+                        </div>`;
             }
 
             // Theme selected
@@ -654,7 +1036,7 @@
                         <div class="info-box-header">
                             <div class="info-box-title">Theme Information</div>
                             <div class="theme-icon">
-                                <i class="icon ${theme.icon || 'fa-map-marked-alt'}"></i>
+                                <i class="icon ${theme.icon.replace('icon-', '')}"></i>
                             </div>
                         </div>
                         <div class="text-content">
@@ -672,7 +1054,7 @@
                 // Clear and populate subthemes
                 subthemeMenu.innerHTML = '';
                 theme.subthemes.forEach(subtheme => {
-                    const item = createDropdownItem(subtheme.name, 'folder-open', () => {
+                    const item = createDropdownItem(subtheme.name, subtheme.icon || 'icon-question', () => {
                         selectSubtheme(subtheme);
                     });
                     subthemeMenu.appendChild(item);
@@ -683,36 +1065,10 @@
                 indicatorDropdown.style.display = 'none';
                 
                 // Reset indicator info box to default state
-                const indicatorInfo = document.querySelector('.indicator-info');
-                if (indicatorInfo) {
-                    indicatorInfo.innerHTML = `
-                        <div class="info-box-header">
-                            <div class="info-box-title">Indicator Information</div>
-                            <div class="indicator-icon">
-                                <i class="icon icon-question"></i>
-                            </div>
-                        </div>
-                        <div class="text-content">
-                            <h2 class="indicator-title">Select an Indicator</h2>
-                            <p class="indicator-description">Choose a sub-theme first, then select an indicator to view its details.</p>
-                        </div>`;
-                }
+                resetInfoBox('.indicator-info', 'indicator');
                 
                 // Reset subtheme info box to default state
-                const subthemeInfo = document.querySelector('.subtheme-info');
-                if (subthemeInfo) {
-                    subthemeInfo.innerHTML = `
-                        <div class="info-box-header">
-                            <div class="info-box-title">Sub-theme Information</div>
-                            <div class="subtheme-icon">
-                                <i class="icon icon-question"></i>
-                            </div>
-                        </div>
-                        <div class="text-content">
-                            <h2 class="subtheme-title">Select a Sub-theme</h2>
-                            <p class="subtheme-description">Choose a sub-theme from the dropdown above to view its details.</p>
-                        </div>`;
-                }
+                resetInfoBox('.subtheme-info', 'subtheme');
                 
                 closeAllDropdowns();
                 
@@ -755,7 +1111,7 @@
                         <div class="info-box-header">
                             <div class="info-box-title">Sub-theme Information</div>
                             <div class="subtheme-icon">
-                                <i class="icon ${subtheme.icon || 'fa-folder-open'}"></i>
+                                <i class="icon ${getIconClass(subtheme.icon)}"></i>
                             </div>
                         </div>
                         <div class="text-content">
@@ -765,20 +1121,7 @@
                 }
                 
                 // Reset indicator info box to default state
-                const indicatorInfo = document.querySelector('.indicator-info');
-                if (indicatorInfo) {
-                    indicatorInfo.innerHTML = `
-                        <div class="info-box-header">
-                            <div class="info-box-title">Indicator Information</div>
-                            <div class="indicator-icon">
-                                <i class="icon icon-question"></i>
-                            </div>
-                        </div>
-                        <div class="text-content">
-                            <h2 class="indicator-title">Select an Indicator</h2>
-                            <p class="indicator-description">Choose an indicator from the dropdown above to view its details and map.</p>
-                        </div>`;
-                }
+                resetInfoBox('.indicator-info', 'indicator');
                 
                 // Show indicator dropdown
                 indicatorDropdown.style.display = 'block';
@@ -788,7 +1131,7 @@
                 console.log('Populating indicators for subtheme:', subtheme.name, 'indicators:', subtheme.indicators);
                 subtheme.indicators.forEach(indicator => {
                     console.log('Creating dropdown item for indicator:', indicator.title, 'id:', indicator.id);
-                    const item = createDropdownItem(indicator.title, indicator.icon.replace('fa-', ''), (e) => {
+                    const item = createDropdownItem(indicator.title, indicator.icon || 'icon-question', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         selectIndicator(indicator);
@@ -856,7 +1199,7 @@
                     <div class="info-box-header">
                         <div class="info-box-title">Indicator Information</div>
                         <div class="indicator-icon">
-                            <i class="icon ${indicator.icon}"></i>
+                            <i class="icon ${getIconClass(indicator.icon)}"></i>
                         </div>
                     </div>
                     <div class="text-content">
@@ -995,6 +1338,9 @@
               }
             }
           });
+          
+          // Call initDropdowns to populate the theme dropdown
+          initDropdowns();
         });
       </script>
     </div>
@@ -1550,5 +1896,21 @@
             fetchWordPressPosts(currentIndicator);
         });
     </script>
+
+    <!-- Modal for Markdown Content -->
+    <div id="markdownModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Content</h2>
+          <button id="closeModal" class="modal-close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="modalContent"></div>
+        </div>
+      </div>
+      <div class="modal-backdrop"></div>
+    </div>
 </body>
 </html>
