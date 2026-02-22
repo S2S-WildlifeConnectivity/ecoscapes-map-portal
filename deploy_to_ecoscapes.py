@@ -105,6 +105,13 @@ def deploy_to_github():
     except subprocess.CalledProcessError:
         pass  # Remote already exists
 
+    # Check if there are changes to commit
+    result = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True)
+    if result.stdout.strip():
+        subprocess.run(['git', 'commit', '-m', 'Deploy to GitHub Pages'], check=True)
+    else:
+        print("No changes to commit, proceeding with push...")
+    
     # Push to master (your repo uses master)
     subprocess.run(['git', 'push', '-u', 'origin', 'master'], check=True)
 
