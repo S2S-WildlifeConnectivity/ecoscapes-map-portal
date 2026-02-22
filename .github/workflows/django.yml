@@ -4,8 +4,6 @@ on:
   push:
     branches: [ master ]
   # Allow manual deployment from the Actions tab
-  page_build:
-    types: [none]
   workflow_dispatch:
 
 # Set the permissions for the GITHUB_TOKEN
