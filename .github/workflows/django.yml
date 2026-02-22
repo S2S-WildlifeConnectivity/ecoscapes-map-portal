@@ -47,9 +47,9 @@ jobs:
         mkdir -p static
         touch static/.gitkeep
     
-    - name: Collect static files
+    - name: Export to GitHub Pages
       run: |
-        python manage.py collectstatic --noinput
+        python manage.py export_to_gh_pages
         
     - name: Export to GitHub Pages
       run: |
