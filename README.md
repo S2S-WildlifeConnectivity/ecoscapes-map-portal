@@ -99,3 +99,4 @@ This project uses a custom icon font system for better performance and customiza
 2. Access it at: `https://s2s-wildlifeconnectivity.github.io/ecoscapes-map-portal/'
 `
 
+# Updated for deployment
