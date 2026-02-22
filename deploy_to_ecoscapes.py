@@ -13,6 +13,9 @@ def collect_static():
 
     # Copy template and static files
     shutil.copytree('templates', 'docs/templates', dirs_exist_ok=True)
+    
+    # Copy help.md to docs directory
+    shutil.copy('static/help.md', 'docs/help.md')
 
     # Create a simple HTML file for GitHub Pages
     with open('docs/index.html', 'w') as f:
