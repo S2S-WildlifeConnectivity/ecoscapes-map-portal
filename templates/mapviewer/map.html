@@ -69,6 +69,10 @@
           <button id="darkModeToggle" class="dark-mode-toggle" data-tooltip="Toggle Dark Mode">
             <i class="fas fa-moon"></i>
           </button>
+          <div id="logoContainer" class="logo-container">
+            <img id="logoImageLight" class="logo-light" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Light.png" alt="EcoScapes Logo" style="width: 100%; height: 100%; object-fit: contain; display: block;">
+            <img id="logoImageDark" class="logo-dark" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Dark.png" alt="EcoScapes Logo" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+          </div>
         </div>
       </div>
       <div class="two-column">
@@ -153,9 +157,15 @@
             if (currentTheme === 'dark') {
                 htmlElement.setAttribute('data-theme', 'dark');
                 updateDarkModeToggle(true);
+                // Show dark mode logo
+                document.querySelector('.logo-light').style.display = 'none';
+                document.querySelector('.logo-dark').style.display = 'block';
             } else {
                 htmlElement.removeAttribute('data-theme');
                 updateDarkModeToggle(false);
+                // Show light mode logo
+                document.querySelector('.logo-light').style.display = 'block';
+                document.querySelector('.logo-dark').style.display = 'none';
             }
             
             // Toggle dark mode
@@ -166,10 +176,16 @@
                     htmlElement.removeAttribute('data-theme');
                     localStorage.setItem('theme', 'light');
                     updateDarkModeToggle(false);
+                    // Switch to light mode logo
+                    document.querySelector('.logo-light').style.display = 'block';
+                    document.querySelector('.logo-dark').style.display = 'none';
                 } else {
                     htmlElement.setAttribute('data-theme', 'dark');
                     localStorage.setItem('theme', 'dark');
                     updateDarkModeToggle(true);
+                    // Switch to dark mode logo
+                    document.querySelector('.logo-light').style.display = 'none';
+                    document.querySelector('.logo-dark').style.display = 'block';
                 }
             });
             
@@ -679,6 +695,12 @@ If you continue to experience issues, please refresh the page or contact support
                         
                         showModal('Help & Documentation', fallbackContent);
                     });
+            });
+            
+            // Logo click functionality
+            const logoContainer = document.getElementById('logoContainer');
+            logoContainer.addEventListener('click', function() {
+                window.open('https://naturesquamish.ca', '_blank');
             });
             
             // =================================

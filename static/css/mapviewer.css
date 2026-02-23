@@ -254,6 +254,28 @@ body, html {
   color: var(--primary);
 }
 
+.logo-container {
+  margin-left: 40px;
+  margin-right: 20px;
+  height: 62px;
+  width: auto;
+  max-width: 115px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  cursor: pointer;
+}
+
+.logo-container img {
+  transition: var(--transition);
+  max-height: 100%;
+  width: auto;
+}
+
+.logo-container:hover img {
+  opacity: 0.8;
+}
+
 .view-mode-btn i {
   font-size: 1.1em;
 }
