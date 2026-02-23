@@ -66,6 +66,9 @@
           <button id="helpModal" class="help-modal-btn" data-tooltip="Help & Documentation">
             <i class="fas fa-question-circle"></i>
           </button>
+          <button id="shareLocation" class="share-location-btn" data-tooltip="Share Map Location">
+            <i class="fas fa-share-alt"></i>
+          </button>
           <button id="darkModeToggle" class="dark-mode-toggle" data-tooltip="Toggle Dark Mode">
             <i class="fas fa-moon"></i>
           </button>
@@ -681,6 +684,12 @@ If you continue to experience issues, please refresh the page or contact support
                     });
             });
             
+            // Share location button functionality
+            const shareLocationBtn = document.getElementById('shareLocation');
+            shareLocationBtn.addEventListener('click', function() {
+                shareCurrentMapLocation();
+            });
+            
             // =================================
            // Utility Functions
            // =================================
@@ -726,6 +735,148 @@ If you continue to experience issues, please refresh the page or contact support
                        <h2 class="${type}-title">${defaultTitles[type]}</h2>
                        <p class="${type}-description">${defaultDescriptions[type]}</p>
                    </div>`;
+           }
+           
+           // Share current map location functionality
+           function shareCurrentMapLocation() {
+               try {
+                   // Get the currently visible map iframe
+                   const map1 = document.getElementById('map1');
+                   const map2 = document.getElementById('map2');
+                   const currentMap = map2.style.display !== 'none' ? map2 : map1;
+                   
+                   if (!currentMap || !currentMap.src) {
+                       alert('No map is currently loaded. Please select an indicator first.');
+                       return;
+                   }
+                   
+                   // Get the current iframe URL
+                   const currentMapUrl = new URL(currentMap.src);
+                   
+                   // Extract the location parameters from the map URL
+                   const locParam = currentMapUrl.searchParams.get('loc');
+                   if (!locParam) {
+                       alert('Map location not available. Please try navigating the map first.');
+                       return;
+                   }
+                   
+                   // Build the shareable URL with map location
+                   const currentAppUrl = new URL(window.location.href);
+                   currentAppUrl.searchParams.set('map_loc', locParam);
+                   
+                   // Copy to clipboard
+                   navigator.clipboard.writeText(currentAppUrl.toString()).then(() => {
+                       // Show success message
+                       showShareSuccess(currentAppUrl.toString());
+                   }).catch(err => {
+                       // Fallback: show the URL for manual copying
+                       showShareDialog(currentAppUrl.toString());
+                   });
+                   
+               } catch (error) {
+                   console.error('Error sharing map location:', error);
+                   alert('Unable to share map location. Please try again.');
+               }
+           }
+           
+           // Show share success notification
+           function showShareSuccess(url) {
+               // Create a temporary notification
+               const notification = document.createElement('div');
+               notification.style.cssText = `
+                   position: fixed;
+                   top: 20px;
+                   right: 20px;
+                   background: #4CAF50;
+                   color: white;
+                   padding: 15px 20px;
+                   border-radius: 8px;
+                   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                   z-index: 10000;
+                   font-family: inherit;
+                   max-width: 400px;
+               `;
+               notification.innerHTML = `
+                   <div style="display: flex; align-items: center; gap: 10px;">
+                       <i class="fas fa-check-circle" style="font-size: 20px;"></i>
+                       <div>
+                           <strong>Location Shared!</strong>
+                           <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">URL copied to clipboard</div>
+                       </div>
+                   </div>
+               `;
+               
+               document.body.appendChild(notification);
+               
+               // Remove after 3 seconds
+               setTimeout(() => {
+                   if (notification.parentNode) {
+                       notification.parentNode.removeChild(notification);
+                   }
+               }, 3000);
+           }
+           
+           // Show share dialog as fallback
+           function showShareDialog(url) {
+               const dialog = document.createElement('div');
+               dialog.style.cssText = `
+                   position: fixed;
+                   top: 0;
+                   left: 0;
+                   right: 0;
+                   bottom: 0;
+                   background: rgba(0,0,0,0.5);
+                   display: flex;
+                   align-items: center;
+                   justify-content: center;
+                   z-index: 10000;
+               `;
+               
+               dialog.innerHTML = `
+                   <div style="background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+                       <h3 style="margin: 0 0 15px 0; color: #333;">Share Map Location</h3>
+                       <p style="margin: 0 0 15px 0; color: #666; line-height: 1.5;">Copy this URL to share the current map location:</p>
+                       <div style="background: #f5f5f5; padding: 12px; border-radius: 6px; word-break: break-all; font-family: monospace; font-size: 12px; margin-bottom: 20px;">${url}</div>
+                       <button onclick="this.closest('div[style*=fixed]').remove()" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">Close</button>
+                   </div>
+               `;
+               
+               document.body.appendChild(dialog);
+               
+               // Close on background click
+               dialog.addEventListener('click', (e) => {
+                   if (e.target === dialog) {
+                       dialog.remove();
+                   }
+               });
+           }
+
+           // Restore map location from URL parameters
+           function restoreMapLocationFromUrl() {
+               try {
+                   const urlParams = new URLSearchParams(window.location.search);
+                   const mapLoc = urlParams.get('map_loc');
+                   
+                   if (mapLoc && currentIndicator && currentIndicator.map1_url) {
+                       // Update the map URL with the saved location
+                       const map1 = document.getElementById('map1');
+                       const map2 = document.getElementById('map2');
+                       
+                       if (map1) {
+                           const baseUrl = new URL(currentIndicator.map1_url);
+                           baseUrl.searchParams.set('loc', mapLoc);
+                           map1.src = baseUrl.toString();
+                       }
+                       
+                       if (map2 && currentIndicator.map2_url) {
+                           const baseUrl = new URL(currentIndicator.map2_url);
+                           baseUrl.searchParams.set('loc', mapLoc);
+                           map2.src = baseUrl.toString();
+                       }
+                   }
+               } catch (error) {
+                   console.error('Error restoring map location:', error);
+               }
            }
 
             // Handle view mode toggle functionality
@@ -831,6 +982,7 @@ If you continue to experience issues, please refresh the page or contact support
                     currentTheme: currentTheme?.id,
                     currentSubtheme: currentSubtheme?.id,
                     currentIndicator: currentIndicator?.id,
+                    currentIndicatorObject: currentIndicator,
                     paramsString: params.toString()
                 });
                 
@@ -1255,6 +1407,11 @@ If you continue to experience issues, please refresh the page or contact support
                     // Start loading the map after a small delay to ensure spinner is visible
                     setTimeout(() => {
                         map1.src = indicator.map1_url;
+                        
+                        // Restore map location from URL parameters after map loads
+                        setTimeout(() => {
+                            restoreMapLocationFromUrl();
+                        }, 1000);
                     }, 50);
                     
                     // Set up map2 if URL exists
@@ -1270,8 +1427,11 @@ If you continue to experience issues, please refresh the page or contact support
                         map2.style.display = 'none';
                     }
                     
-                    console.log('About to set active view and call updateURL');
-                    // Set active view to explore
+                    // Set active view to explore (with proper null checks)
+                    const exploreLabel = document.querySelector('.view-label.explore');
+                    const analyzeLabel = document.querySelector('.view-label.analyze');
+                    const viewToggle = document.getElementById('viewModeToggle');
+                    
                     if (exploreLabel) exploreLabel.classList.add('active');
                     if (analyzeLabel) analyzeLabel.classList.remove('active');
                     if (viewToggle) viewToggle.checked = false;
@@ -1338,9 +1498,6 @@ If you continue to experience issues, please refresh the page or contact support
               }
             }
           });
-          
-          // Call initDropdowns to populate the theme dropdown
-          initDropdowns();
         });
       </script>
     </div>
@@ -1534,6 +1691,12 @@ If you continue to experience issues, please refresh the page or contact support
             if (map1 && map2 && mapPlaceholder) {
                 if (subTheme && indicator && indicator.map1_url) {
                     map1.src = indicator.map1_url;
+                    
+                    // Restore map location from URL parameters after map loads
+                    setTimeout(() => {
+                        restoreMapLocationFromUrl();
+                    }, 1000);
+                    
                     // Show map1, hide map2
                     map1.style.display = 'block';
                     map2.style.display = 'none';
