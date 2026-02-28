@@ -706,6 +706,51 @@ body, html {
   .map-column {
     height: 60vh;
   }
+  
+  /* Hide info panel by default on mobile */
+  .two-column {
+    grid-template-columns: 0 1fr;
+    gap: 0;
+  }
+  
+  .two-column:not(.collapsed) .info-column {
+    transform: translateX(-100%);
+    padding-right: 0;
+  }
+  
+  .two-column.collapsed .info-column {
+    transform: translateX(0);
+  }
+  
+  /* Shrink toolbar buttons to fit on mobile */
+  .toolbar-buttons-right {
+    gap: 5px;
+  }
+  
+  .reset-filters-btn,
+  .help-modal-btn,
+  .dark-mode-toggle,
+  .view-mode-btn,
+  .fullscreen-btn,
+  .toggle-info-btn,
+  .git-hub-link-btn,
+  .theme-collections-btn {
+    padding: 8px 10px;
+    margin-left: 5px;
+    font-size: 0.85em;
+  }
+  
+  .logo-container {
+    margin-left: 20px;
+    margin-right: 10px;
+    height: 50px;
+    max-width: 90px;
+  }
+  
+  .toolbar-top {
+    padding: 10px 15px;
+    gap: 10px;
+  }
 }
     
     /* Map Elements */
