@@ -52,13 +52,13 @@
         </div>
         <div class="toolbar-buttons-right">
           <button id="resetFilters" class="reset-filters-btn" data-tooltip="Reset All Filters">
-            <i class="fas fa-undo"></i>
+            <i class="fa-solid fa-filter-circle-xmark"></i>
           </button>
           <button id="viewModeToggle" class="view-mode-btn" data-tooltip="Switch to Analyze Mode">
-            <i class="fas fa-binoculars"></i>
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
           </button>
           <button id="toggleInfoBox" class="toggle-info-btn" data-tooltip="Hide Information Pane">
-            <i class="fas fa-info-circle"></i>
+            <i class="fa-solid fa-eye-slash"></i>
           </button>
           <button id="fullscreen" class="fullscreen-btn" data-tooltip="Open Full Screen in new tab">
             <i class="fas fa-maximize"></i>
@@ -68,6 +68,9 @@
           </button>
           <button id="darkModeToggle" class="dark-mode-toggle" data-tooltip="Toggle Dark Mode">
             <i class="fas fa-moon"></i>
+          </button>
+          <button id="gitHublink" class="git-hub-link-btn" data-tooltip="Open Data Portal - GitHub">
+            <i class="fa-brands fa-github"></i>
           </button>
           <div id="logoContainer" class="logo-container">
             <img id="logoImageLight" class="logo-light" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Light.png" alt="EcoScapes Logo" style="width: 100%; height: 100%; object-fit: contain; display: block;">
@@ -239,11 +242,11 @@
                 // Toggle between filled/unfilled icons and update tooltip
                 const isCollapsed = twoColumnLayout.classList.contains('collapsed');
                 if (isCollapsed) {
-                    toggleIcon.className = 'far fa-info-circle';
+                    toggleIcon.className = 'fa-solid fa-eye';
                     toggleInfoBox.classList.add('collapsed');
                     toggleInfoBox.setAttribute('data-tooltip', 'Show Information Pane');
                 } else {
-                    toggleIcon.className = 'fas fa-info-circle';
+                    toggleIcon.className = 'fa-solid fa-eye-slash';
                     toggleInfoBox.classList.remove('collapsed');
                     toggleInfoBox.setAttribute('data-tooltip', 'Hide Information Pane');
                 }
@@ -281,6 +284,15 @@
                 fullscreenBtn.addEventListener('click', () => {
                     // Open current URL in a new tab to break out of iframe
                     window.open(window.location.href, '_blank');
+                });
+            }
+
+            // GitHub button functionality
+            const githubBtn = document.getElementById('gitHublink');
+            if (githubBtn) {
+                githubBtn.addEventListener('click', () => {
+                    // Open the open data URL in a new tab to break out of iframe
+                    window.open("https://github.com/S2S-WildlifeConnectivity/EcoScapes-Open-Data-Portal.git", '_blank');
                 });
             }
         });
@@ -905,13 +917,13 @@ If you continue to experience issues, please refresh the page or contact support
                     // Switch to analyze mode
                     map1.style.display = 'none';
                     map2.style.display = 'block';
-                    toggleIcon.className = 'fas fa-arrow-trend-up';
+                    toggleIcon.className = 'fas fa-binoculars';
                     viewModeToggle.setAttribute('data-tooltip', 'Switch to Explore Mode');
                 } else {
                     // Switch to explore mode
                     map1.style.display = 'block';
                     map2.style.display = 'none';
-                    toggleIcon.className = 'fas fa-binoculars';
+                    toggleIcon.className = 'fa-solid fa-magnifying-glass-chart';
                     viewModeToggle.setAttribute('data-tooltip', 'Switch to Analyze Mode');
                 }
                 

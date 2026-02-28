@@ -133,14 +133,20 @@ body, html {
    UI Components
    ================================= */
 /* Buttons */
+/* Toggle Info Button - Hover/Focus */
 .toggle-info-btn:hover,
 .toggle-info-btn:focus {
-  border-color: var(--primary);
-  background-color: var(--bg-hover);
-  color: var(--primary);
+  /* Inherited from Right Navigation Buttons hover/focus states */
 }
 
-.reset-filters-btn {
+/* Right Navigation Buttons - Base Styles */
+.reset-filters-btn,
+.help-modal-btn,
+.dark-mode-toggle,
+.view-mode-btn,
+.fullscreen-btn,
+.toggle-info-btn,
+.git-hub-link-btn {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -157,70 +163,34 @@ body, html {
   width: auto;
 }
 
+/* Right Navigation Buttons - Hover/Focus States */
 .reset-filters-btn:hover,
-.reset-filters-btn:focus {
-  border-color: var(--primary);
-  background-color: var(--bg-hover);
-  color: var(--primary);
-}
-
-.reset-filters-btn i {
-  font-size: 1.1em;
-}
-
-.help-modal-btn {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin-left: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.95em;
-  color: var(--text);
-  transition: var(--transition);
-  min-width: auto;
-  width: auto;
-}
-
+.reset-filters-btn:focus,
 .help-modal-btn:hover,
-.help-modal-btn:focus {
-  border-color: var(--primary);
-  background-color: var(--bg-hover);
-  color: var(--primary);
-}
-
-.help-modal-btn i {
-  font-size: 1.1em;
-}
-
-.dark-mode-toggle {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin-left: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.95em;
-  color: var(--text);
-  transition: var(--transition);
-  min-width: auto;
-  width: auto;
-}
-
+.help-modal-btn:focus,
 .dark-mode-toggle:hover,
-.dark-mode-toggle:focus {
+.dark-mode-toggle:focus,
+.view-mode-btn:hover,
+.view-mode-btn:focus,
+.fullscreen-btn:hover,
+.fullscreen-btn:focus,
+.toggle-info-btn:hover,
+.toggle-info-btn:focus,
+.git-hub-link-btn:hover,
+.git-hub-link-btn:focus {
   border-color: var(--primary);
   background-color: var(--bg-hover);
   color: var(--primary);
 }
 
-.dark-mode-toggle i {
+/* Right Navigation Buttons - Icon Styles */
+.reset-filters-btn i,
+.help-modal-btn i,
+.dark-mode-toggle i,
+.view-mode-btn i,
+.fullscreen-btn i,
+.toggle-info-btn i,
+.git-hub-link-btn i {
   font-size: 1.1em;
 }
 
@@ -231,27 +201,7 @@ body, html {
 }
 
 .view-mode-btn {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin-left: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.95em;
-  color: var(--text);
-  transition: var(--transition);
-  min-width: auto;
-  width: auto;
-}
-
-.view-mode-btn:hover,
-.view-mode-btn:focus {
-  border-color: var(--primary);
-  background-color: var(--bg-hover);
-  color: var(--primary);
+  /* Inherited from Right Navigation Buttons base styles */
 }
 
 .logo-container {
@@ -277,14 +227,12 @@ body, html {
 }
 
 .view-mode-btn i {
-  font-size: 1.1em;
+  /* Inherited from Right Navigation Buttons icon styles */
 }
 
 .fullscreen-btn:hover,
 .fullscreen-btn:focus {
-  border-color: var(--primary);
-  background-color: var(--bg-hover);
-  color: var(--primary);
+  /* Inherited from Right Navigation Buttons hover/focus states */
 }
 
 /* Dropdowns */
@@ -631,50 +579,19 @@ body, html {
 
     /* Buttons & Toggles */
 .toggle-info-btn {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin-left: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.95em;
-  color: var(--text);
-  transition: var(--transition);
-  min-width: auto;
-  width: auto;
+  /* Inherited from Right Navigation Buttons base styles */
 }
 
-.toggle-info-btn.collapsed i {
-  color: var(--text-light);
-  opacity: 0.5;
+.toggle-info-btn i {
+  /* Inherited from Right Navigation Buttons icon styles */
 }
-
-    .toggle-info-btn i {
-      font-size: 1.1em;
-    }
 
 .fullscreen-btn {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  margin-left: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.95em;
-  color: var(--text);
-  transition: var(--transition);
-  min-width: auto;
-  width: auto;
+  /* Inherited from Right Navigation Buttons base styles */
 }
 
     .fullscreen-btn i {
-      font-size: 1.1em;
+      /* Inherited from Right Navigation Buttons icon styles */
     }
 
 .two-column.collapsed {
