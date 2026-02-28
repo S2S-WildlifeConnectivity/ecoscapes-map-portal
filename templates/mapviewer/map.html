@@ -1,0 +1,2391 @@
+{% load dict_filters %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Viewer - {{ page_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'fonts/custom-icons.css' %}">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Toggle Info Button */
+        .toggle-info-btn {
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 10px 16px;
+          margin-left: 10px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.95em;
+          color: #2d3748;
+          transition: all 0.2s ease;
+        }
+        .toggle-info-btn:hover {
+          border-color: #4CAF50;
+          background-color: #f8fafc;
+          color: #4CAF50;
+        }
+        .toggle-info-btn i {
+          font-size: 1.1em;
+        }
+        
+        /* App container: two-column layout */
+        .two-column {
+          display: grid;
+          grid-template-columns: 35% 65%; /* 35% info column, 65% map */
+          grid-template-rows: 1fr; /* Take up remaining space */
+          gap: 20px;
+          height: calc(100vh - 110px); /* Account for header height */
+          box-sizing: border-box;
+          position: relative;
+          overflow: hidden;
+          width: 100%;
+        }
+
+        /* Info column styles */
+        .info-column {
+          width: 100%;
+          max-width: 100%;
+          overflow-x: hidden;
+          overflow-y: auto;
+          padding-right: 10px;
+          transition: transform 0.2s ease-in-out;
+          will-change: transform;
+          position: relative;
+          background: white;
+          z-index: 2;
+          height: 100%;
+        }
+
+        /* When collapsed, slide the info column out of view */
+        .two-column.collapsed {
+          grid-template-columns: 0 1fr; /* Use 1fr to take remaining space */
+        }
+
+        .two-column.collapsed .info-column {
+          transform: translateX(-100%);
+          padding-right: 0;
+        }
+
+        /* Map container takes remaining space */
+        .map-container {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          min-width: 0; /* Allows the map to shrink below its content size */
+          transition: margin-left 0.3s ease-in-out;
+          overflow: hidden; /* Prevent any content from overflowing */
+        }
+        
+        /* When info column is collapsed, let map take full width */
+        .two-column.collapsed .map-container {
+          width: 100%;
+          grid-column: 1 / -1; /* Make map span full width */
+        }
+        
+        /* Map container takes remaining space */
+        .map-container {
+          width: 100%;
+          height: 100%;
+          min-width: 0; /* Allows the map to shrink below its content size */
+        }
+
+        /* Three-column-section: stack info boxes vertically in left column */
+        .three-column-section {
+          display: flex;
+          flex-direction: column; /* stack children */
+          gap: 15px;
+          grid-column: 1; /* place in left column of grid */
+          margin-bottom: 0; /* remove bottom margin since map is beside */
+          height: auto;
+        }
+
+        /* Map container: fills the right column */
+        .map-container {
+          grid-column: 2; /* place in right column of grid */
+          width: 100%;
+          height: 100%; /* stretch to full height of app-container */
+          position: relative;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        
+        .three-column-section:not(.hidden) + .map-container {
+          margin-top: 20px;
+        }
+        /* ===== Dropdown Styles ===== */
+        .dropdown {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            margin-right: 15px;
+            min-width: 200px;
+        }
+
+        .dropdown p {
+            margin: 0 0 5px 0;
+            white-space: nowrap;
+            font-size: 12px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        /* Dropdown Toggle Button */
+        .dropdown-toggle {
+            background-color: #ffffff;
+            color: #2c3e50;
+            padding: 10px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            min-width: 220px;
+            text-align: left;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            user-select: none;
+        }
+        /* Dropdown Menu */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            min-width: 240px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            border-radius: 8px;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 4px;
+            border: 1px solid #e9ecef;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            pointer-events: none;
+        }
+
+        .dropdown.active .dropdown-menu {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* Dropdown Menu Items */
+        .dropdown-menu a {
+            color: #2c3e50;
+            padding: 10px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #f1f3f5;
+            transition: all 0.15s ease;
+            font-size: 14px;
+        }
+
+        .dropdown-menu a:hover,
+        .dropdown-menu a:focus {
+            background-color: #f8f9fa;
+            color: #4CAF50;
+        }
+
+        .dropdown-menu a.active {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-weight: 500;
+            border-left: 3px solid #4CAF50;
+        }
+
+        /* Dropdown Submenu */
+        .dropdown-submenu > .dropdown-submenu-content {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            min-width: 200px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            z-index: 1001;
+        }
+
+        .dropdown-submenu:hover > .dropdown-submenu-content {
+            display: block;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 10px;
+            color: #4CAF50;
+            text-align: center;
+        }
+
+        .dropdown-item i.fa-chevron-right {
+            margin-left: auto;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        /* Toggle Switch Component */
+        .toggle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: auto;
+            gap: 4px;
+            margin-right: 20px;
+            box-sizing: border-box;
+        }
+
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .toggle-label.active {
+            color: #166534;
+        }
+
+        .time-series-note {
+            color: #6b7280;
+            font-size: 12px;
+            margin: 0 0 8px 0;
+            text-align: center;
+            font-style: italic;
+            opacity: 0.8;
+            order: -1;
+            width: 100%;
+        }
+
+        /* Modern Toggle Switch */
+        .toggle-switch {
+            --toggle-width: 48px;
+            --toggle-height: 24px;
+            --toggle-handle-size: 20px;
+            --toggle-padding: 2px;
+            --toggle-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+            position: relative;
+            display: inline-block;
+            width: var(--toggle-width);
+            height: var(--toggle-height);
+            margin: 0;
+            vertical-align: middle;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e2e8f0;
+            transition: var(--toggle-transition);
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: var(--toggle-handle-size);
+            width: var(--toggle-handle-size);
+            left: var(--toggle-padding);
+            bottom: var(--toggle-padding);
+            background-color: white;
+            transition: var(--toggle-transition);
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #4CAF50;
+        }
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(calc(var(--toggle-width) - var(--toggle-handle-size) - (2 * var(--toggle-padding))));
+        }
+        .toggle-switch input:focus + .toggle-slider {
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+
+        .toolbar-top {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            background-color: #ffffff;
+            border-radius: 20px;
+        }
+
+        /* ===== Info Box Components ===== */
+
+        /* Three Column Section Styling */
+        .three-column-section {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            margin-bottom: 20px;
+            gap: 15px;
+            border-radius: 20px;
+            min-height: 0;
+            height: auto;
+        }
+
+        .column-left, .column-middle, .column-right {
+            flex: 1 1 100%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+
+        .info-column {
+          display: flex;
+          flex-direction: column;
+          gap: 20px; /* space between cards */
+        }
+
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Info box containers: row with icon + text */
+        .theme-info,
+        .subtheme-info,
+        .indicator-info {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          width: 100%;
+          margin: 0;
+          min-height: 140px;
+          position: relative;
+          text-align: left;
+        }
+        
+        .info-box-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;  /* Align items to top */
+          width: 100%;
+          position: relative;
+          z-index: 2;  /* Ensure header content stays above the icon */
+          max-height: 25px;
+        }
+        
+        /* Ensure the title has enough right padding to not be covered by the icon */
+        .info-box-title {
+          padding-right: 50px;  /* Make room for the icon */
+          position: relative;
+          z-index: 2;  /* Ensure title stays above the icon */
+        }
+
+        /* Text block: align with icon top, add slight offset */
+        .text-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          min-width: 0;
+          text-align: left;
+        }
+
+
+        
+        .info-box-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .indicator-meta-head {
+          margin-top: 10px; /* needed to override the h2 styles */
+          font-size: 11px;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .indicator-meta-body {
+          margin-top: 10px; /* needed to override the h2 styles */
+          font-size: 11px;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+            /* Icon Base Styles */
+            .indicator-icon,
+            .theme-icon,
+            .subtheme-icon {
+              font-size: 50px;       /* Increased size */
+              color: #4CAF50;
+              margin: 0;
+              display: flex;
+              align-items: flex-start; /* Align to top */
+              justify-content: center;
+              transition: all 0.2s ease;
+              opacity: 0.9;
+              width: 60px;           /* Increased width */
+              height: 70px;          /* Increased height to allow overflow */
+              margin-top: 0px;     /* Pull up slightly into the header */
+              margin-right: 0px;    /* Pull right slightly */
+              position: relative;    /* For z-index */
+              z-index: 1;            /* Ensure icon stays above other elements */
+            }
+
+
+            /* Nested Icons */
+            .indicator-icon i,
+            .theme-icon i,
+            .subtheme-icon i {
+                font-size: 1em;
+                line-height: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .subtheme-icon i::before {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+            }
+
+        /* Hover Effects */
+        .indicator-info:hover .indicator-icon,
+        .theme-info:hover .theme-icon {
+            opacity: 1;
+            transform: translateY(-1px);
+        }
+
+        /* Title Styles */
+        .indicator-title, .theme-title, .subtheme-title {
+            margin: 0; /* needed to override the h2 styles */
+            color: #1a365d;
+            font-size: 1.5em;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+        /* Description Styles */
+        .indicator-description, .theme-description, .subtheme-description {
+            margin: 0;
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 0.9em;
+            max-width: 100%;
+        }
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading-spinner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 8px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .map-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 150px;
+            color: #4a5568;
+            width: 100%;
+            height: 100%;
+        }
+
+        .placeholder-content {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .placeholder-content i {
+            font-size: 3em;
+            color: #4CAF50;
+            margin-bottom: 1.5rem;
+        }
+
+        .placeholder-content h3 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .placeholder-content p {
+            color: #718096;
+            line-height: 1.6;
+            margin: 0;
+        }
+        .map-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+        .map-iframe.active {
+            display: block;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Dropdown Styling */
+        .dropdown-toggle {
+            background-color: #ffffff;
+            color: #2c3e50;
+            padding: 10px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            min-width: 220px;
+            text-align: left;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            user-select: none;
+        }
+        .dropdown-toggle:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        .dropdown-toggle i {
+            margin-left: 12px;
+            font-size: 12px;
+            transition: transform 0.2s ease;
+        }
+        .dropdown.active .dropdown-toggle i {
+            transform: rotate(180deg);
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 240px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            border-radius: 8px;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 4px;
+            border: 1px solid #e9ecef;
+        }
+        .dropdown.active .dropdown-menu {
+            display: block;
+        }
+
+        /* iFrame Styling */
+        .map-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+        .map-iframe.active {
+            display: block;
+        }
+
+
+        /* Remove duplicate dropdown styles */
+        .dropdown-toggle {
+            background-color: #ffffff;
+            color: #2c3e50;
+            padding: 10px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            user-select: none;
+            box-sizing: border-box;
+        }
+        .dropdown-toggle:hover {
+            border-color: #4CAF50;
+            background-color: #f8fafc;
+        }
+        .dropdown-toggle:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        .dropdown-toggle i {
+            margin-left: 12px;
+            font-size: 12px;
+            transition: transform 0.2s ease;
+        }
+        .dropdown.active .dropdown-toggle i {
+            transform: rotate(180deg);
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 240px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            border-radius: 8px;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 4px;
+            border: 1px solid #e9ecef;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+            pointer-events: none;
+            left: 0;
+            top: 100%;
+        }
+
+        .dropdown.active .dropdown-menu {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        /* Remove fadeIn keyframes as we're using CSS transitions now */
+        .dropdown-menu a {
+            color: #2c3e50;
+            padding: 10px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #f1f3f5;
+            transition: all 0.15s ease;
+            font-size: 14px;
+        }
+        .map-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+        .map-iframe.active {
+            display: block;
+        }
+        .dropdown-submenu > .dropdown-submenu-content {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            min-width: 240px;
+            max-height: 70vh;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 1001;
+        }
+        .dropdown-submenu:hover > .dropdown-submenu-content {
+            display: block
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 10px;
+            color: #4CAF50;
+            text-align: center;
+        }
+
+
+        .dropdown-item i.fa-chevron-right {
+            margin-left: auto;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .dropdown {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            margin-right: 10px;
+            position: relative;
+            min-width: 220px;
+        }
+        .dropdown p {
+            margin: 0 10px 0 0;
+            white-space: nowrap;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        .dropdown-toggle {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 16px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95em;
+            color: #2d3748;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .dropdown-toggle:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        .dropdown-toggle:hover {
+            border-color: #4CAF50;
+            background-color: #f8fafc;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+        .dropdown.active .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        /* Map iframe styles to prevent layout shift */
+        .map-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .map-iframe.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+      <!-- Top Toolbar with Dropdowns -->
+      <div class="toolbar-top">
+        <!-- Theme Dropdown -->
+        <div class="dropdown" id="themeDropdown">
+          <p><strong>Step 1:</strong> Choose a Theme: </p>
+          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+            <span>Select Theme</span>
+            <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 8px; transition: transform 0.2s ease;"></i>
+          </button>
+          <div class="dropdown-menu" id="themeMenu" role="menu">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Subtheme Dropdown (initially hidden) -->
+        <div class="dropdown" id="subthemeDropdown" style="display: none;">
+          <p><strong>Step 2:</strong> Choose a Sub-theme: </p>
+          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+            <span>Select Sub-theme</span>
+            <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 8px; transition: transform 0.2s ease;"></i>
+          </button>
+          <div class="dropdown-menu" id="subthemeMenu" role="menu">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Indicator Dropdown (initially hidden) -->
+        <div class="dropdown" id="indicatorDropdown" style="display: none;">
+          <p><strong>Step 3:</strong> Choose an Indicator: </p>
+          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+            <span>Select Indicator</span>
+            <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 8px; transition: transform 0.2s ease;"></i>
+          </button>
+          <div class="dropdown-menu" id="indicatorMenu" role="menu">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <div class="toggle-container">
+          <p class="time-series-note">Note: Not all indicators have time-series data.</p>
+          <div class="toggle-wrapper">
+            <span id="exploreLabel" class="toggle-label active">Explore</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="viewToggle">
+              <span class="toggle-slider"></span>
+            </label>
+            <span id="analyzeLabel" class="toggle-label">Analyze</span>
+          </div>
+        </div>
+        
+        <button id="toggleInfoBox" class="toggle-info-btn" title="Toggle Info Box">
+          <i class="fas fa-info-circle"></i> Toggle Info
+        </button>
+      </div>
+      <div class="two-column">
+        <div class="info-column">
+          <div class="column-left">
+            <div class="theme-info">
+              <div class="info-box-header">
+                <div class="info-box-title">Theme Information</div>
+                <div class="theme-icon">
+                  <i class="icon icon-question"></i>
+                </div>
+              </div>
+              <div class="text-content">
+                <h2 class="theme-title">Select a Theme</h2>
+                <p class="theme-description">Choose a theme from the dropdown to view its details.</p>
+              </div>
+            </div>
+          </div>
+          <div class="column-middle">
+            <div class="subtheme-info">
+              <div class="info-box-header">
+                <div class="info-box-title">Sub-theme Information</div>
+                <div class="subtheme-icon">
+                  <i class="icon icon-question"></i>
+                </div>
+              </div>
+              <div class="text-content">
+                <h2 class="subtheme-title">Select a Sub-theme</h2>
+                <p class="subtheme-description">Choose a sub-theme from the dropdown to view its details.</p>
+              </div>
+            </div>
+          </div>
+          <div class="column-right">
+            <div class="indicator-info">
+              <div class="info-box-header">
+                <div class="info-box-title">Indicator Information</div>
+                <div class="indicator-icon">
+                  <i class="icon icon-question"></i>
+                </div>
+              </div>
+              <div class="text-content">
+                <h2 class="indicator-title">Select an Indicator</h2>
+                <p class="indicator-description">Choose an indicator from the dropdown to view its details and related data.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column: map -->
+        <div class="map-column">
+          <div class="map-container">
+            <div id="mapPlaceholder" class="map-placeholder">
+              <div class="placeholder-content">
+                <i class="fas fa-map-marked-alt" style="font-size: 3em; margin-bottom: 20px; color: #4CAF50;"></i>
+                <h3>Select a Sub-theme and Indicator</h3>
+                <p>Please choose a sub-theme from the dropdown menu above, then select an indicator to view the map.</p>
+              </div>
+            </div>
+            <div id="loadingSpinner" class="loading-spinner">
+              <div class="spinner"></div>
+              <p style="text-align: center; color: #4CAF50; font-weight: 500; margin-top: 15px;">Loading map data...</p>
+            </div>
+            <iframe id="map1" class="map-iframe" src="" style="display: none;"></iframe>
+            <iframe id="map2" class="map-iframe" src="" style="display: none;"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        // Toggle info box functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleInfoBox = document.getElementById('toggleInfoBox');
+            const twoColumnLayout = document.querySelector('.two-column');
+            const infoColumn = document.querySelector('.info-column');
+            const mapContainer = document.querySelector('.map-container');
+            const toggleIcon = toggleInfoBox.querySelector('i');
+
+            // Toggle the info box
+            toggleInfoBox.addEventListener('click', () => {
+                // Toggle the 'collapsed' class on the two-column layout
+                twoColumnLayout.classList.toggle('collapsed');
+                
+                // Toggle between chevron icons and update the tooltip
+                const isCollapsed = twoColumnLayout.classList.contains('collapsed');
+                toggleIcon.className = isCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
+                toggleInfoBox.title = isCollapsed ? 'Show Info Box' : 'Hide Info Box';
+                
+                // Force map resize after a small delay to ensure the container has resized
+                const resizeMaps = () => {
+                    if (window.map1) window.map1.invalidateSize();
+                    if (window.map2) window.map2.invalidateSize();
+                };
+                
+                // Trigger resize events with a small delay to ensure DOM has updated
+                setTimeout(resizeMaps, 10);
+                setTimeout(resizeMaps, 100);
+                
+                // Also trigger window resize for any other elements that might need it
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 10);
+            });
+            
+            // Initial map resize after everything is loaded
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    if (window.map1) window.map1.invalidateSize();
+                    if (window.map2) window.map2.invalidateSize();
+                }, 100);
+            });
+        });
+        
+        // Define Dropdown class first
+        class Dropdown {
+            constructor(element) {
+                this.element = element;
+                this.toggle = element.querySelector('.dropdown-toggle');
+                this.menu = element.querySelector('.dropdown-menu');
+                this.chevron = this.toggle.querySelector('i');
+                this.isOpen = false;
+                this.menuItems = Array.from(this.menu.querySelectorAll('a'));
+                this.focusedIndex = -1;
+                
+                this.initialize();
+            }
+            
+            initialize() {
+                // Add ARIA attributes
+                this.toggle.setAttribute('aria-haspopup', 'true');
+                this.toggle.setAttribute('aria-expanded', 'false');
+                
+                // Toggle dropdown on click
+                this.toggle.addEventListener('click', (e) => this.toggleDropdown(e));
+                
+                // Close when clicking outside
+                document.addEventListener('click', (e) => this.handleOutsideClick(e));
+                
+                // Handle keyboard navigation
+                this.toggle.addEventListener('keydown', (e) => this.handleToggleKeyDown(e));
+                this.menu.addEventListener('keydown', (e) => this.handleMenuKeyDown(e));
+                
+                // Handle menu item interactions
+                this.menuItems.forEach((item, index) => {
+                    item.addEventListener('click', () => this.close());
+                    item.addEventListener('focus', () => this.focusedIndex = index);
+                });
+            }
+            
+            toggleDropdown(e) {
+                e.stopPropagation();
+                
+                if (this.isOpen) {
+                    this.close();
+                } else {
+                    this.open();
+                }
+            }
+            
+            open() {
+                if (this.isOpen) return;
+                
+                // Close other dropdowns first
+                Dropdown.closeAll(this);
+                
+                // Open this dropdown
+                this.element.classList.add('active');
+                this.toggle.setAttribute('aria-expanded', 'true');
+                this.chevron.style.transform = 'rotate(180deg)';
+                this.isOpen = true;
+                
+                // Focus first item if available
+                if (this.menuItems.length > 0) {
+                    this.focusedIndex = 0;
+                    this.menuItems[0].focus();
+                }
+            }
+            
+            close() {
+                if (!this.isOpen) return;
+                
+                this.element.classList.remove('active');
+                this.toggle.setAttribute('aria-expanded', 'false');
+                this.chevron.style.transform = '';
+                this.isOpen = false;
+                this.focusedIndex = -1;
+                
+                // Return focus to toggle
+                this.toggle.focus();
+            }
+            
+            handleOutsideClick(e) {
+                if (!this.element.contains(e.target)) {
+                    this.close();
+                }
+            }
+            
+            handleToggleKeyDown(e) {
+                const { key } = e;
+                
+                if (key === 'Enter' || key === ' ' || key === 'ArrowDown' || key === 'Down') {
+                    e.preventDefault();
+                    this.open();
+                } else if (key === 'Escape') {
+                    this.close();
+                } else if (key === 'ArrowUp' || key === 'Up') {
+                    e.preventDefault();
+                    this.open();
+                    if (this.menuItems.length > 0) {
+                        this.focusedIndex = this.menuItems.length - 1;
+                        this.menuItems[this.focusedIndex].focus();
+                    }
+                }
+            }
+            
+            handleMenuKeyDown(e) {
+                const { key } = e;
+                
+                switch (key) {
+                    case 'Escape':
+                        e.preventDefault();
+                        this.close();
+                        break;
+                        
+                    case 'ArrowDown':
+                    case 'Down':
+                        e.preventDefault();
+                        this.focusNextItem();
+                        break;
+                        
+                    case 'ArrowUp':
+                    case 'Up':
+                        e.preventDefault();
+                        this.focusPrevItem();
+                        break;
+                        
+                    case 'Home':
+                        e.preventDefault();
+                        this.focusItem(0);
+                        break;
+                        
+                    case 'End':
+                        e.preventDefault();
+                        this.focusItem(this.menuItems.length - 1);
+                        break;
+                        
+                    case 'Tab':
+                        if (!e.shiftKey && this.focusedIndex === this.menuItems.length - 1) {
+                            // Close dropdown when tabbing out of the last item
+                            this.close();
+                        } else if (e.shiftKey && this.focusedIndex <= 0) {
+                            // Close dropdown when shift+tabbing out of the first item
+                            e.preventDefault();
+                            this.close();
+                        }
+                        break;
+                }
+            }
+            
+            focusNextItem() {
+                this.focusedIndex = (this.focusedIndex + 1) % this.menuItems.length;
+                this.menuItems[this.focusedIndex].focus();
+            }
+            
+            focusPrevItem() {
+                this.focusedIndex = (this.focusedIndex - 1 + this.menuItems.length) % this.menuItems.length;
+                this.menuItems[this.focusedIndex].focus();
+            }
+            
+            focusItem(index) {
+                if (index >= 0 && index < this.menuItems.length) {
+                    this.focusedIndex = index;
+                    this.menuItems[index].focus();
+                }
+            }
+            
+            static closeAll(exceptDropdown = null) {
+                document.querySelectorAll('.dropdown').forEach(dropdown => {
+                    const instance = dropdown._dropdownInstance;
+                    if (instance && instance !== exceptDropdown) {
+                        instance.close();
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize dropdowns
+            document.querySelectorAll('.dropdown').forEach(dropdown => {
+                dropdown._dropdownInstance = new Dropdown(dropdown);
+            });
+            
+            // Handle map toggle functionality
+            const viewToggle = document.getElementById('viewToggle');
+            const map1 = document.getElementById('map1');
+            const map2 = document.getElementById('map2');
+            const exploreLabel = document.getElementById('exploreLabel');
+            const analyzeLabel = document.getElementById('analyzeLabel');
+
+            viewToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    // Switch to map2 (Analyze view)
+                    map1.style.display = 'none';
+                    map2.style.display = 'block';
+                    exploreLabel.classList.remove('active');
+                    analyzeLabel.classList.add('active');
+                } else {
+                    // Switch to map1 (Explore view)
+                    map1.style.display = 'block';
+                    map2.style.display = 'none';
+                    exploreLabel.classList.add('active');
+                    analyzeLabel.classList.remove('active');
+                }
+            });
+
+            // Get all themes data from the template
+            const themesData = [
+                {% for theme in themes %}
+                {
+                    id: '{{ theme.id|escapejs }}',
+                    name: '{{ theme.name|escapejs }}',
+                    subthemes: [
+                        {% for subtheme in theme.subthemes %}
+                        {
+                            id: '{{ subtheme.id|escapejs }}',
+                            name: '{{ subtheme.name|escapejs }}',
+                            description: '{{ subtheme.description|default:''|escapejs }}',
+                            icon: '{{ subtheme.icon|default:''|escapejs }}',
+                            indicators: [
+                                {% for indicator_id in subtheme.indicators %}
+                                    {% with indicator=indicators.all|get_item:indicator_id %}
+                                        {
+                                            id: '{{ indicator_id|escapejs }}',
+                                            title: '{{ indicator.title|escapejs }}',
+                                            description: '{{ indicator.description|escapejs }}',
+                                            icon: '{{ indicator.icon|escapejs }}',
+                                            map1_url: '{{ indicator.map1_url|default:''|escapejs }}',
+                                            map2_url: '{{ indicator.map2_url|default:''|escapejs }}',
+                                            posts: '{{ indicator.posts|default:''|escapejs }}',
+                                            source: '{{ indicator.source|default:''|escapejs }}',
+                                            unit_of_measure: '{{ indicator.unit_of_measure|default:''|escapejs }}',
+                                            theme: '{{ theme.id|escapejs }}'  // Add theme ID to each indicator
+                                        }{% if not forloop.last %},{% endif %}
+                                    {% endwith %}
+                                {% endfor %}
+                            ]
+                        }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    description: '{{ theme.description|escapejs }}',
+                    icon: '{{ theme.icon|escapejs }}'
+{{ ... }}
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+
+            // DOM Elements
+            const themeDropdown = document.getElementById('themeDropdown');
+            const subthemeDropdown = document.getElementById('subthemeDropdown');
+            const indicatorDropdown = document.getElementById('indicatorDropdown');
+            const themeMenu = document.getElementById('themeMenu');
+            const subthemeMenu = document.getElementById('subthemeMenu');
+            const indicatorMenu = document.getElementById('indicatorMenu');
+            const indicatorTitle = document.querySelector('.indicator-title');
+            const indicatorDescription = document.querySelector('.indicator-description');
+            const indicatorIcon = document.querySelector('.indicator-icon i');
+            const map1Iframe = document.getElementById('map1');
+            const map2Iframe = document.getElementById('map2');
+
+            // Current selections
+            let currentTheme = null;
+            let currentSubtheme = null;
+            let currentIndicator = null;
+            
+            // Function to update URL with current state
+            function updateURL() {
+                const params = new URLSearchParams();
+                if (currentTheme) params.set('theme', currentTheme.id);
+                if (currentSubtheme) params.set('subtheme', currentSubtheme.id);
+                if (currentIndicator) params.set('indicator', currentIndicator.id);
+                
+                const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+                window.history.pushState({}, '', newUrl);
+            }
+            
+            // Function to find theme by ID
+            function findThemeById(themeId) {
+                return themesData.find(theme => theme.id === themeId);
+            }
+            
+            // Load state from URL parameters
+            function loadStateFromURL() {
+                const params = new URLSearchParams(window.location.search);
+                const themeId = params.get('theme');
+                const subthemeId = params.get('subtheme');
+                const indicatorId = params.get('indicator');
+                
+                if (themeId) {
+                    const theme = findThemeById(themeId);
+                    if (theme) {
+                        // Use setTimeout to ensure dropdowns are initialized
+                        setTimeout(() => {
+                            selectTheme(theme);
+                            
+                            if (subthemeId) {
+                                // Small delay to ensure theme is processed
+                                setTimeout(() => {
+                                    const subtheme = theme.subthemes.find(s => s.id === subthemeId);
+                                    if (subtheme) {
+                                        selectSubtheme(subtheme);
+                                        
+                                        if (indicatorId) {
+                                            // Small delay to ensure subtheme is processed
+                                            setTimeout(() => {
+                                                const indicator = subtheme.indicators.find(i => i.id === indicatorId);
+                                                if (indicator) {
+                                                    selectIndicator(indicator);
+                                                }
+                                            }, 100);
+                                        }
+                                    }
+                                }, 100);
+                            }
+                        }, 100);
+                    }
+                }
+            }
+            
+            // Handle browser back/forward buttons
+            window.addEventListener('popstate', () => {
+                loadStateFromURL();
+            });
+
+            // Initialize dropdowns and load state from URL
+            function initDropdowns() {
+                // Load state from URL after a short delay to ensure DOM is ready
+                setTimeout(loadStateFromURL, 100);
+                // Populate themes
+                themesData.forEach(theme => {
+                    const item = createDropdownItem(theme.name, 'folder', () => {
+                        selectTheme(theme);
+                    });
+                    themeMenu.appendChild(item);
+                });
+
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.dropdown')) {
+                        closeAllDropdowns();
+                    }
+                });
+
+                // Toggle dropdowns on button click
+                document.querySelectorAll('.dropdown-toggle').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const dropdown = this.closest('.dropdown');
+                        const isOpen = dropdown.classList.contains('show');
+                        closeAllDropdowns();
+                        if (!isOpen) {
+                            dropdown.classList.add('show');
+                        }
+                    });
+                });
+            }
+
+            // Create dropdown item
+            function createDropdownItem(text, icon, onClick) {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'dropdown-item';
+                item.innerHTML = `
+                    <span>${text}</span>
+                `;
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onClick(e);
+                    // Find and close the parent dropdown
+                    const dropdown = e.target.closest('.dropdown');
+                    if (dropdown && dropdown._dropdownInstance) {
+                        dropdown._dropdownInstance.close();
+                    } else {
+                        // Fallback to close all dropdowns if the instance isn't available
+                        closeAllDropdowns();
+                    }
+                });
+                return item;
+            }
+
+            // Close all dropdowns
+            function closeAllDropdowns() {
+                if (typeof Dropdown !== 'undefined' && typeof Dropdown.closeAll === 'function') {
+                    Dropdown.closeAll();
+                } else {
+                    // Fallback for when Dropdown class is not available yet
+                    document.querySelectorAll('.dropdown').forEach(dropdown => {
+                        dropdown.classList.remove('active');
+                        const toggle = dropdown.querySelector('.dropdown-toggle');
+                        const chevron = toggle?.querySelector('i.fa-chevron-down');
+                        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+                        if (chevron) chevron.style.transform = '';
+                    });
+                }
+            }
+
+            // Update theme info box
+            function updateThemeInfo(theme) {
+                const themeInfo = document.querySelector('.theme-info');
+                if (!theme) {
+                    themeInfo.innerHTML = `
+                        <div class="info-box-header">
+                            <div class="info-box-title">Theme Information</div>
+                            <div class="theme-icon">
+                                <i class="icon fas fa-map-marked-alt"></i>
+                            </div>
+                        </div>
+                        <div class="text-content">
+                            <h2 class="theme-title">Map Viewer</h2>
+                            <p class="theme-description">Select a theme, subtheme, and indicator to view detailed information.</p>
+                        </div>`;
+                    return;
+                }
+                
+                themeInfo.innerHTML = `
+                    <div class="info-box-header">
+                        <div class="info-box-title">Theme Information</div>
+                        <div class="theme-icon">
+                            <i class="icon ${theme.icon || 'fa-map-marked-alt'}"></i>
+                        </div>
+                    </div>
+                    <div class="text-content">
+                        <h2 class="theme-title">${theme.name}</h2>
+                        <p class="theme-description">${theme.description}</p>
+                    </div>`;
+            }
+
+            // Theme selected
+            function selectTheme(theme) {
+                currentTheme = theme;
+                currentSubtheme = null;
+                currentIndicator = null;
+                
+                // Get map elements
+                const map1 = document.getElementById('map1');
+                const map2 = document.getElementById('map2');
+                const mapPlaceholder = document.getElementById('mapPlaceholder');
+                
+                // Reset map display to show placeholder and hide maps
+                if (mapPlaceholder && map1 && map2) {
+                    mapPlaceholder.style.display = 'flex';
+                    map1.style.display = 'none';
+                    map2.style.display = 'none';
+                    
+                    // Clear map sources
+                    map1.src = '';
+                    map2.src = '';
+                }
+                
+                // Update theme button
+                updateButton(themeDropdown, theme.name, 'folder');
+                
+                // Reset theme info to default
+                const themeInfo = document.querySelector('.theme-info');
+                if (themeInfo) {
+                    themeInfo.innerHTML = `
+                        <div class="info-box-header">
+                            <div class="info-box-title">Theme Information</div>
+                            <div class="theme-icon">
+                                <i class="icon ${theme.icon || 'fa-map-marked-alt'}"></i>
+                            </div>
+                        </div>
+                        <div class="text-content">
+                            <h2 class="theme-title">${theme.name}</h2>
+                            <p class="theme-description">${theme.description}</p>
+                        </div>`;
+                }
+                
+                // Reset subtheme dropdown
+                updateButton(subthemeDropdown, 'Select Subtheme', 'folder-open');
+                
+                // Show subtheme dropdown
+                subthemeDropdown.style.display = 'block';
+                
+                // Clear and populate subthemes
+                subthemeMenu.innerHTML = '';
+                theme.subthemes.forEach(subtheme => {
+                    const item = createDropdownItem(subtheme.name, 'folder-open', () => {
+                        selectSubtheme(subtheme);
+                    });
+                    subthemeMenu.appendChild(item);
+                });
+                
+                // Reset and hide indicator dropdown
+                updateButton(indicatorDropdown, 'Select Indicator', 'chart-bar');
+                indicatorDropdown.style.display = 'none';
+                
+                // Reset indicator info box to default state
+                const indicatorInfo = document.querySelector('.indicator-info');
+                if (indicatorInfo) {
+                    indicatorInfo.innerHTML = `
+                        <div class="info-box-header">
+                            <div class="info-box-title">Indicator Information</div>
+                            <div class="indicator-icon">
+                                <i class="icon icon-question"></i>
+                            </div>
+                        </div>
+                        <div class="text-content">
+                            <h2 class="indicator-title">Select an Indicator</h2>
+                            <p class="indicator-description">Choose a sub-theme first, then select an indicator to view its details.</p>
+                        </div>`;
+                }
+                
+                // Reset subtheme info box to default state
+                const subthemeInfo = document.querySelector('.subtheme-info');
+                if (subthemeInfo) {
+                    subthemeInfo.innerHTML = `
+                        <div class="info-box-header">
+                            <div class="info-box-title">Sub-theme Information</div>
+                            <div class="subtheme-icon">
+                                <i class="icon icon-question"></i>
+                            </div>
+                        </div>
+                        <div class="text-content">
+                            <h2 class="subtheme-title">Select a Sub-theme</h2>
+                            <p class="subtheme-description">Choose a sub-theme from the dropdown above to view its details.</p>
+                        </div>`;
+                }
+                
+                closeAllDropdowns();
+            }
+
+            // Subtheme selected
+            function selectSubtheme(subtheme) {
+                // Reset current indicator
+                currentIndicator = null;
+                
+                // Get map elements
+                const map1 = document.getElementById('map1');
+                const map2 = document.getElementById('map2');
+                const mapPlaceholder = document.getElementById('mapPlaceholder');
+                
+                // Reset map display to show placeholder and hide maps
+                mapPlaceholder.style.display = 'flex';
+                map1.style.display = 'none';
+                map2.style.display = 'none';
+                
+                // Clear map sources
+                map1.src = '';
+                map2.src = '';
+                
+                // Update current subtheme
+                currentSubtheme = subtheme;
+                
+                // Update subtheme button
+                updateButton(subthemeDropdown, subtheme.name, 'folder-open');
+                
+                // Reset and update indicator button
+                updateButton(indicatorDropdown, 'Select Indicator', 'chart-bar');
+                
+                // Update subtheme info box
+                const subthemeInfo = document.querySelector('.subtheme-info');
+                if (subthemeInfo) {
+                    subthemeInfo.innerHTML = `
+                        <div class="info-box-header">
+                            <div class="info-box-title">Sub-theme Information</div>
+                            <div class="subtheme-icon">
+                                <i class="icon ${subtheme.icon || 'fa-folder-open'}"></i>
+                            </div>
+                        </div>
+                        <div class="text-content">
+                            <h2 class="subtheme-title">${subtheme.name}</h2>
+                            <p class="subtheme-description">${subtheme.description || 'No description available.'}</p>
+                        </div>`;
+                }
+                
+                // Reset indicator info box to default state
+                const indicatorInfo = document.querySelector('.indicator-info');
+                if (indicatorInfo) {
+                    indicatorInfo.innerHTML = `
+                        <div class="info-box-header">
+                            <div class="info-box-title">Indicator Information</div>
+                            <div class="indicator-icon">
+                                <i class="icon icon-question"></i>
+                            </div>
+                        </div>
+                        <div class="text-content">
+                            <h2 class="indicator-title">Select an Indicator</h2>
+                            <p class="indicator-description">Choose an indicator from the dropdown above to view its details and map.</p>
+                        </div>`;
+                }
+                
+                // Show indicator dropdown
+                indicatorDropdown.style.display = 'block';
+                
+                // Clear and populate indicators
+                indicatorMenu.innerHTML = '';
+                subtheme.indicators.forEach(indicator => {
+                    const item = createDropdownItem(indicator.title, indicator.icon.replace('fa-', ''), (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectIndicator(indicator);
+                    });
+                    indicatorMenu.appendChild(item);
+                });
+                
+                // Close all dropdowns using the Dropdown class if available
+                if (window.Dropdown) {
+                    Dropdown.closeAll();
+                } else {
+                    closeAllDropdowns();
+                }
+                
+                // Ensure theme info is still showing the parent theme
+                if (currentTheme) {
+                    updateThemeInfo(currentTheme);
+                }
+            }
+
+            // Find theme by ID
+            function findThemeById(themeId) {
+                return themesData.find(theme => theme.id === themeId);
+            }
+
+            // Indicator selected
+            function selectIndicator(indicator) {
+                currentIndicator = indicator;
+                
+                // Update indicator button
+                updateButton(indicatorDropdown, indicator.title, indicator.icon.replace('fa-', ''));
+                
+                // Close the dropdown directly using the element's instance
+                const dropdownElement = document.querySelector('.dropdown.active');
+                if (dropdownElement && dropdownElement._dropdownInstance) {
+                    dropdownElement._dropdownInstance.close();
+                } else {
+                    // Fallback to class-based closing if instance not found
+                    document.querySelectorAll('.dropdown').forEach(dropdown => {
+                        dropdown.classList.remove('active');
+                        const toggle = dropdown.querySelector('.dropdown-toggle');
+                        if (toggle) {
+                            toggle.setAttribute('aria-expanded', 'false');
+                            const chevron = toggle.querySelector('i.fa-chevron-down');
+                            if (chevron) chevron.style.transform = '';
+                        }
+                    });
+                }
+                
+                // Update indicator info box
+                const indicatorInfo = document.querySelector('.indicator-info');
+                let unitsHtml = indicator.unit_of_measure ? `<span class="indicator-meta-head"><strong>Units:</strong></span><span class="indicator-meta-body"> ${indicator.unit_of_measure}  |  </span>` : '';
+                let sourceHtml = indicator.source ? `<span class="indicator-meta-head"><strong>Source:</strong></span><span class="indicator-meta-body"> ${indicator.source}</span>` : '';
+                let metaHtml = '';
+                
+                if (indicator.source || indicator.unit_of_measure) {
+                    metaHtml = `<div class="indicator-meta-container">${unitsHtml}${sourceHtml}</div>`;
+                }
+                
+                indicatorInfo.innerHTML = `
+                    <div class="info-box-header">
+                        <div class="info-box-title">Indicator Information</div>
+                        <div class="indicator-icon">
+                            <i class="icon ${indicator.icon} indicator-icon"></i>
+                        </div>
+                    </div>
+                    <div class="text-content">
+                        <h2 class="indicator-title">${indicator.title}</h2>
+                        <p class="indicator-description">${indicator.description}</p>
+                        <div class="meta-info">${metaHtml}</div>
+                    </div>`;
+                
+                // Find and update the current theme based on the indicator's theme ID
+                if (indicator.theme) {
+                    const theme = findThemeById(indicator.theme);
+                    if (theme) {
+                        currentTheme = theme;
+                        updateThemeInfo(theme);
+                        // Also update the theme dropdown to show the correct theme
+                        updateButton(themeDropdown, theme.name, 'folder');
+                    }
+                } else if (currentTheme) {
+                    // Fallback to current theme if no theme ID in indicator
+                    updateThemeInfo(currentTheme);
+                }
+                
+                // Get map elements
+                const map1 = document.getElementById('map1');
+                const map2 = document.getElementById('map2');
+                const mapPlaceholder = document.getElementById('mapPlaceholder');
+                
+                if (indicator && indicator.map1_url) {
+                    // Get the loading spinner
+                    const loadingSpinner = document.getElementById('loadingSpinner');
+                    
+                    // Hide the placeholder and show the loading spinner
+                    mapPlaceholder.style.display = 'none';
+                    loadingSpinner.style.display = 'flex';
+                    
+                    // Hide any previously shown map
+                    map1.style.display = 'none';
+                    
+                    // Set up map1 with load event to hide spinner and show map
+                    map1.onload = function() {
+                        loadingSpinner.style.display = 'none';
+                        map1.style.display = 'block';
+                    };
+                    
+                    // Set up error handling
+                    map1.onerror = function() {
+                        loadingSpinner.style.display = 'none';
+                        mapPlaceholder.style.display = 'flex';
+                        console.error('Failed to load map');
+                    };
+                    
+                    // Start loading the map after a small delay to ensure spinner is visible
+                    setTimeout(() => {
+                        map1.src = indicator.map1_url;
+                    }, 50);
+                    
+                    // Set up map2 if URL exists
+                    if (indicator.map2_url) {
+                        map2.onload = function() {
+                            // Additional map2 loaded logic if needed
+                        };
+                        map2.src = indicator.map2_url;
+                        map2.style.display = 'none'; // Will be shown when toggled
+                    } else {
+                        map2.style.display = 'none';
+                    }
+                    
+                    // Set active view to explore
+                    if (exploreLabel) exploreLabel.classList.add('active');
+                    if (analyzeLabel) analyzeLabel.classList.remove('active');
+                    if (toggleSwitch) toggleSwitch.checked = false;
+                    currentView = 'explore';
+                } else {
+                    // No map URL, show placeholder
+                    mapPlaceholder.style.display = 'flex';
+                    map1.style.display = 'none';
+                    map2.style.display = 'none';
+                }
+                
+                // Update URL without page reload
+                window.history.pushState({}, '', indicator.url);
+                
+                // Close all dropdowns
+                if (window.Dropdown) {
+                    Dropdown.closeAll();
+                } else {
+                    closeAllDropdowns();
+                }
+            }
+
+            // Update dropdown button content
+            function updateButton(dropdown, text, icon) {
+                const button = dropdown.querySelector('.dropdown-toggle');
+                button.innerHTML = `
+                    <span>${text}</span>
+                    <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 8px; transition: transform 0.2s ease;"></i>
+                `;
+            }
+
+            // Initialize the dropdowns
+            initDropdowns();
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+          const resourcesButton = document.getElementById('resourcesButton');
+          
+          resourcesButton.addEventListener('click', function() {
+            try {
+              // Send a message to the parent window to navigate to the resources section
+              window.parent.postMessage({
+                type: 'NAVIGATE_TO_RESOURCES',
+                target: 'newdev.naturesquamish.ca'  // Target origin for verification
+              }, '*');
+              
+              // Also update the parent URL if we're not in an iframe (for testing)
+              if (window === window.top) {
+                const currentUrl = window.location.href.split('#')[0];
+                window.location.href = currentUrl + '#resources';
+              }
+            } catch (e) {
+              console.error('Error navigating to resources:', e);
+            }
+          });
+          
+          // Optional: Listen for a response from the parent
+          window.addEventListener('message', function(event) {
+            // Verify the message is from a trusted origin
+            if (event.origin === 'https://newdev.naturesquamish.ca') {
+              if (event.data.type === 'NAVIGATION_COMPLETE') {
+                console.log('Successfully navigated to resources section');
+              }
+            }
+          });
+        });
+      </script>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enhanced dropdown functionality
+            class Dropdown {
+                constructor(element) {
+                    this.element = element;
+                    this.toggle = element.querySelector('.dropdown-toggle');
+                    this.menu = element.querySelector('.dropdown-menu');
+                    this.chevron = this.toggle.querySelector('i');
+                    this.isOpen = false;
+                    this.menuItems = Array.from(this.menu.querySelectorAll('a'));
+                    this.focusedIndex = -1;
+                    
+                    this.initialize();
+                }
+                
+                initialize() {
+                    // Add ARIA attributes
+                    this.toggle.setAttribute('aria-haspopup', 'true');
+                    this.toggle.setAttribute('aria-expanded', 'false');
+                    
+                    // Toggle dropdown on click
+                    this.toggle.addEventListener('click', (e) => this.toggleDropdown(e));
+                    
+                    // Close when clicking outside
+                    document.addEventListener('click', (e) => this.handleOutsideClick(e));
+                    
+                    // Handle keyboard navigation
+                    this.toggle.addEventListener('keydown', (e) => this.handleToggleKeyDown(e));
+                    this.menu.addEventListener('keydown', (e) => this.handleMenuKeyDown(e));
+                    
+                    // Handle menu item interactions
+                    this.menuItems.forEach((item, index) => {
+                        item.addEventListener('click', () => this.close());
+                        item.addEventListener('focus', () => this.focusedIndex = index);
+                    });
+                }
+                
+                toggleDropdown(e) {
+                    e.stopPropagation();
+                    
+                    if (this.isOpen) {
+                        this.close();
+                    } else {
+                        this.open();
+                    }
+                }
+                
+                open() {
+                    if (this.isOpen) return;
+                    
+                    // Close other dropdowns first
+                    Dropdown.closeAll(this);
+                    
+                    // Open this dropdown
+                    this.element.classList.add('active');
+                    this.toggle.setAttribute('aria-expanded', 'true');
+                    this.chevron.style.transform = 'rotate(180deg)';
+                    this.isOpen = true;
+                    
+                    // Focus first item if available
+                    if (this.menuItems.length > 0) {
+                        this.focusedIndex = 0;
+                        this.menuItems[0].focus();
+                    }
+                }
+                
+                close() {
+                    if (!this.isOpen) return;
+                    
+                    this.element.classList.remove('active');
+                    this.toggle.setAttribute('aria-expanded', 'false');
+                    this.chevron.style.transform = '';
+                    this.isOpen = false;
+                    this.focusedIndex = -1;
+                    
+                    // Return focus to toggle
+                    this.toggle.focus();
+                }
+                
+                handleOutsideClick(e) {
+                    if (!this.element.contains(e.target)) {
+                        this.close();
+                    }
+                }
+                
+                handleToggleKeyDown(e) {
+                    const { key } = e;
+                    
+                    if (key === 'Enter' || key === ' ' || key === 'ArrowDown' || key === 'Down') {
+                        e.preventDefault();
+                        this.open();
+                    } else if (key === 'Escape') {
+                        this.close();
+                    } else if (key === 'ArrowUp' || key === 'Up') {
+                        e.preventDefault();
+                        this.open();
+                        if (this.menuItems.length > 0) {
+                            this.focusedIndex = this.menuItems.length - 1;
+                            this.menuItems[this.focusedIndex].focus();
+                        }
+                    }
+                }
+                
+                handleMenuKeyDown(e) {
+                    const { key } = e;
+                    
+                    switch (key) {
+                        case 'Escape':
+                            e.preventDefault();
+                            this.close();
+                            break;
+                            
+                        case 'ArrowDown':
+                        case 'Down':
+                            e.preventDefault();
+                            this.focusNextItem();
+                            break;
+                            
+                        case 'ArrowUp':
+                        case 'Up':
+                            e.preventDefault();
+                            this.focusPrevItem();
+                            break;
+                            
+                        case 'Home':
+                            e.preventDefault();
+                            this.focusItem(0);
+                            break;
+                            
+                        case 'End':
+                            e.preventDefault();
+                            this.focusItem(this.menuItems.length - 1);
+                            break;
+                            
+                        case 'Tab':
+                            if (!e.shiftKey && this.focusedIndex === this.menuItems.length - 1) {
+                                // Close dropdown when tabbing out of the last item
+                                this.close();
+                            } else if (e.shiftKey && this.focusedIndex <= 0) {
+                                // Close dropdown when shift+tabbing out of the first item
+                                e.preventDefault();
+                                this.close();
+                            }
+                            break;
+                    }
+                }
+                
+                focusNextItem() {
+                    this.focusedIndex = (this.focusedIndex + 1) % this.menuItems.length;
+                    this.menuItems[this.focusedIndex].focus();
+                }
+                
+                focusPrevItem() {
+                    this.focusedIndex = (this.focusedIndex - 1 + this.menuItems.length) % this.menuItems.length;
+                    this.menuItems[this.focusedIndex].focus();
+                }
+                
+                focusItem(index) {
+                    if (index >= 0 && index < this.menuItems.length) {
+                        this.focusedIndex = index;
+                        this.menuItems[index].focus();
+                    }
+                }
+                
+                static closeAll(exceptDropdown = null) {
+                    document.querySelectorAll('.dropdown').forEach(dropdown => {
+                        const instance = dropdown._dropdownInstance;
+                        if (instance && instance !== exceptDropdown) {
+                            instance.close();
+                        }
+                    });
+                }
+            }
+            
+            // Initialize all dropdowns on the page
+            document.querySelectorAll('.dropdown').forEach(dropdown => {
+                dropdown._dropdownInstance = new Dropdown(dropdown);
+            });
+            
+            // Update the map iframe source and show the map
+            const map1 = document.getElementById('map1');
+            const map2 = document.getElementById('map2');
+            const mapPlaceholder = document.getElementById('mapPlaceholder');
+            
+            if (map1 && map2 && mapPlaceholder) {
+                if (subTheme && indicator && indicator.map1_url) {
+                    map1.src = indicator.map1_url;
+                    // Show map1, hide map2
+                    map1.style.display = 'block';
+                    map2.style.display = 'none';
+                    exploreLabel.classList.add('active');
+                    analyzeLabel.classList.remove('active');
+                    toggleSwitch.checked = false;
+                    currentView = 'explore';
+                } else {
+                    // Show map2, hide map1
+                    map1.style.display = 'none';
+                    map2.style.display = 'block';
+                    exploreLabel.classList.remove('active');
+                    analyzeLabel.classList.add('active');
+                    toggleSwitch.checked = true;
+                    currentView = 'analyze';
+                }
+            }
+
+            toggleSwitch.addEventListener('change', function() {
+                if (this.checked) {
+                    switchView('analyze');
+                } else {
+                    switchView('explore');
+                }
+            });
+
+            // Also make the labels clickable
+            exploreLabel.addEventListener('click', function() {
+                if (currentView !== 'explore') {
+                    switchView('explore');
+                }
+            });
+
+            analyzeLabel.addEventListener('click', function() {
+                if (currentView !== 'analyze') {
+                    switchView('analyze');
+                }
+            });
+
+            // Fetch WordPress posts with tag 'indicator one'
+            const postsContainer = document.getElementById('postsList');
+            const loadingElement = document.getElementById('loadingPosts');
+            
+            // Debug function to log API responses
+            async function debugFetch(url) {
+                try {
+                    console.log('Fetching:', url);
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    console.log('Response from', url, ':', data);
+                    return { response, data };
+                } catch (error) {
+                    console.error('Error in debugFetch:', error);
+                    throw error;
+                }
+            }
+            
+            // Function to format date
+            function formatDate(dateString) {
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString(undefined, options);
+            }
+            
+            // Function to strip HTML tags and limit excerpt length
+            function stripHtml(html, maxLength = 100) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                let text = tmp.textContent || tmp.innerText || '';
+                
+                // Trim and limit length
+                text = text.trim();
+                if (text.length > maxLength) {
+                    text = text.substring(0, maxLength).trim() + '...';
+                }
+                return text;
+            }
+
+            // Function to create a clean excerpt from content
+            function createExcerpt(html) {
+                if (!html) return '';
+                // Create temporary element to parse HTML
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                // Get text content and clean it up
+                let text = tmp.textContent || tmp.innerText || '';
+                // Remove any 'Time to read' patterns
+                text = text.replace(/Time\s*to\s*read[^\w]*/gi, '');
+                // Clean up the text
+                return text
+                    .replace(/\s+/g, ' ')      // Replace multiple spaces
+                    .trim()                     // Trim whitespace
+                    .substring(0, 150)          // Limit length
+                    .replace(/\s+\S*$/, '')    // Cut at word boundary
+                    .replace(/[\-–—|:]+$/, '') // Remove trailing punctuation
+                    .trim() + '...';            // Add ellipsis
+            }
+
+            // Store carousel state to prevent memory leaks
+            let carouselState = {
+                resizeObserver: null,
+                resizeTimeout: null,
+                currentIndex: 0,
+                cardWidth: 0,
+                cards: []
+            };
+
+            // Clean up event listeners and observers
+            function cleanupCarousel() {
+                if (carouselState.resizeObserver) {
+                    carouselState.resizeObserver.disconnect();
+                }
+                window.removeEventListener('resize', handleResize);
+                clearTimeout(carouselState.resizeTimeout);
+            }
+
+            // Debounced resize handler
+            function handleResize() {
+                clearTimeout(carouselState.resizeTimeout);
+                carouselState.resizeTimeout = setTimeout(() => {
+                    updateCarouselSize();
+                    updateCarouselPosition();
+                }, 100);
+            }
+
+            // Update carousel size and card measurements
+            function updateCarouselSize() {
+                const carousel = document.getElementById('carousel');
+                if (!carousel || !carouselState.cards.length) return;
+                
+                const card = carouselState.cards[0];
+                const cardStyle = window.getComputedStyle(card);
+                carouselState.cardWidth = card.offsetWidth + 
+                    parseInt(cardStyle.marginLeft) + 
+                    parseInt(cardStyle.marginRight);
+                
+                updateCarouselPosition();
+            }
+
+            // Update carousel position
+            function updateCarouselPosition() {
+                const carousel = document.getElementById('carousel');
+                if (!carousel) return;
+                
+                carousel.scrollTo({
+                    left: carouselState.currentIndex * carouselState.cardWidth,
+                    behavior: 'smooth'
+                });
+                updateButtons();
+            }
+
+            // Update navigation buttons
+            function updateButtons() {
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                if (!prevBtn || !nextBtn) return;
+                
+                prevBtn.style.display = carouselState.currentIndex === 0 ? 'none' : 'flex';
+                nextBtn.style.display = carouselState.currentIndex >= carouselState.cards.length - 1 ? 'none' : 'flex';
+            }
+
+            // Initialize carousel
+            function initCarousel() {
+                cleanupCarousel();
+                
+                const carousel = document.getElementById('carousel');
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+                
+                if (!carousel || !prevBtn || !nextBtn) {
+                    console.warn('Carousel elements not found');
+                    return;
+                }
+                
+                carouselState.cards = Array.from(document.querySelectorAll('.post-card'));
+                if (!carouselState.cards.length) return;
+                
+                // Initial setup
+                updateCarouselSize();
+                updateButtons();
+                
+                // Event listeners
+                prevBtn.addEventListener('click', () => {
+                    if (carouselState.currentIndex > 0) {
+                        carouselState.currentIndex--;
+                        updateCarouselPosition();
+                    }
+                });
+                
+                nextBtn.addEventListener('click', () => {
+                    if (carouselState.currentIndex < carouselState.cards.length - 1) {
+                        carouselState.currentIndex++;
+                        updateCarouselPosition();
+                    }
+                });
+                
+                // Resize observer for better performance
+                carouselState.resizeObserver = new ResizeObserver(handleResize);
+                carouselState.resizeObserver.observe(document.body);
+                
+                // Initial position
+                updateCarouselPosition();
+            }
+
+            // Fetch posts from WordPress REST API with improved error handling
+            async function fetchWordPressPosts(indicator) {
+                const postsContainer = document.getElementById('posts-container');
+                const loadingElement = document.getElementById('loading-indicator');
+                
+                // Clean up previous carousel
+                cleanupCarousel();
+                
+                // Reset state
+                carouselState = {
+                    resizeObserver: null,
+                    resizeTimeout: null,
+                    currentIndex: 0,
+                    cardWidth: 0,
+                    cards: []
+                };
+                
+                // Show loading state
+                if (loadingElement) loadingElement.style.display = 'block';
+                if (postsContainer) {
+                    postsContainer.innerHTML = '';
+                    postsContainer.style.display = 'block';
+                }
+                
+                try {
+                    if (!indicator || !indicator.posts) {
+                        console.log('No posts filter defined for this indicator');
+                        if (postsContainer) postsContainer.innerHTML = '<p>No posts configuration found for this indicator.</p>';
+                        return;
+                    }
+
+                    // Convert the posts string to a slug format
+                    const tagSlug = indicator.posts.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                    console.log('Searching for WordPress posts with tag slug:', tagSlug);
+                    
+                    // Add timeout for the fetch request
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                    
+                    // First, get the tag ID for the indicator's posts
+                    const tagResponse = await fetch(
+                        `https://newdev.naturesquamish.ca/wp-json/wp/v2/tags?slug=${tagSlug}`,
+                        { signal: controller.signal }
+                    );
+                    clearTimeout(timeoutId);
+                    
+                    if (!tagResponse.ok) {
+                        throw new Error(`HTTP error! status: ${tagResponse.status}`);
+                    }
+                    
+                    const tags = await tagResponse.json();
+                    console.log('Found matching tags:', tags);
+                    
+                    if (!tags || tags.length === 0) {
+                        console.warn(`No matching tags found for: ${tagSlug}`);
+                        if (postsContainer) postsContainer.innerHTML = `<p>No posts found for: ${indicator.posts}</p>`;
+                        return;
+                    }
+                    
+                    const tagId = tags[0].id;
+                    console.log(`Found tag ID ${tagId} for "${tagSlug}"`);
+                    
+                    // Fetch posts with excerpts and featured image
+                    const postsResponse = await fetch(
+                        `https://newdev.naturesquamish.ca/wp-json/wp/v2/posts?tags=${tagId}` +
+                        `&_fields=id,title,link,date,excerpt,featured_media` +
+                        `&_embed=wp:featuredmedia` +
+                        `&per_page=3`,
+                        { signal: controller.signal }
+                    );
+                    
+                    if (!postsResponse.ok) {
+                        throw new Error(`Failed to fetch posts: ${postsResponse.statusText}`);
+                    }
+                    
+                    const posts = await postsResponse.json();
+                    console.log(`Fetched ${posts.length} posts for tag ID ${tagId}`);
+                    
+                    if (posts.length === 0) {
+                        if (postsContainer) postsContainer.innerHTML = '<p>No updates available at the moment.</p>';
+                        return;
+                    }
+                    
+                    // Generate HTML for each post
+                    const postsHtml = `
+                        <div class="carousel-container" id="carousel">
+                            ${posts.map(post => {
+                                const featuredImage = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '';
+                                // Use WordPress excerpt directly and clean it up
+                                let excerpt = post.excerpt?.rendered ? stripHtml(post.excerpt.rendered) : 'No description available';
+                                // Add space after 'Time to read' if it exists
+                                excerpt = excerpt.replace(/(Time\s*to\s*read[^<]*)([^\s])/gi, '$1 $2');
+                                
+                                return `
+                                    <article class="post-card">
+                                        ${featuredImage ? `<div class="post-image" style="background-image: url('${featuredImage}')"></div>` : ''}
+                                        <div class="post-content">
+                                            <h3 class="post-title">${post.title.rendered}</h3>
+                                            <div class="post-meta">Posted on ${formatDate(post.date)}</div>
+                                            ${excerpt ? `<p class="post-excerpt">${excerpt}</p>` : ''}
+                                            <a href="${post.link}" class="post-link" target="_blank" rel="noopener noreferrer">Read more →</a>
+                                        </div>
+                                    </article>
+                                `;
+                            }).join('')}
+                        </div>
+                        <button id="prevBtn" class="carousel-nav prev" aria-label="Previous">❮</button>
+                        <button id="nextBtn" class="carousel-nav next" aria-label="Next">❯</button>
+                    `;
+            
+                    // Initialize carousel after posts are loaded
+                    if (postsContainer) {
+                        // Use requestAnimationFrame for smoother updates
+                        requestAnimationFrame(() => {
+                            postsContainer.innerHTML = postsHtml;
+                            
+                            // Initialize carousel on next frame
+                            requestAnimationFrame(() => {
+                                initCarousel();
+                                
+                                // Force a reflow to ensure styles are applied
+                                void postsContainer.offsetHeight;
+                                
+                                // Show the container
+                                postsContainer.style.opacity = '1';
+                            });
+                        });
+                    }
+                    
+                    
+                } catch (error) {
+                    console.error('Error fetching WordPress posts:', error);
+                    const errorMessage = error.name === 'AbortError' 
+                        ? 'Request timed out. Please check your connection and try again.'
+                        : 'Unable to load updates at this time. Please try again later.';
+                    
+                    if (postsContainer) {
+                        postsContainer.innerHTML = `
+                            <div class="error-message">
+                                <p>${errorMessage}</p>
+                                <button onclick="window.location.reload()" class="retry-button">
+                                    <i class="fas fa-sync-alt"></i> Retry
+                                </button>
+                            </div>
+                        `;
+                    }
+                } finally {
+                    if (loadingElement) loadingElement.style.display = 'none';
+                }
+            }
+            
+            // Fetch posts when the page loads with the current indicator's data
+            const currentIndicator = {
+                posts: '{{ indicators.page_name.posts|escapejs }}',
+                title: '{{ indicators.page_name.title|escapejs }}'
+            };
+            fetchWordPressPosts(currentIndicator);
+        });
+    </script>
+</body>
+</html>

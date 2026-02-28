@@ -1,0 +1,376 @@
+import os
+import shutil
+import logging
+from pathlib import Path
+from django.core.management.base import BaseCommand
+from django.test import Client, RequestFactory
+from django.conf import settings
+from django.template.loader import render_to_string, get_template
+from django.http import HttpRequest, Http404
+from django.views.static import serve
+import json
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+class Command(BaseCommand):
+    help = 'Export the site as static files for GitHub Pages'
+
+    def handle(self, *args, **options):
+        # Set up the output directory (docs/ for GitHub Pages)
+        output_dir = Path(settings.BASE_DIR) / 'docs'
+        static_dir = output_dir / 'static'
+        
+        # Clean up previous build files (except .nojekyll and .gitkeep)
+        self.stdout.write('Cleaning up previous build...')
+        for item in output_dir.glob('*'):
+            if item.is_file() and item.name not in ['.nojekyll', 'CNAME']:
+                item.unlink()
+            elif item.is_dir() and item.name != 'static':
+                shutil.rmtree(item, ignore_errors=True)
+        
+        # Clean and create output directories
+        if output_dir.exists():
+            shutil.rmtree(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        static_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Copy static files including fonts
+        static_files_dir = settings.STATIC_ROOT if hasattr(settings, 'STATIC_ROOT') else settings.BASE_DIR / 'static'
+        if os.path.exists(static_files_dir):
+            self.stdout.write(f'Copying static files from {static_files_dir} to {static_dir}...')
+            if os.path.exists(static_dir):
+                shutil.rmtree(static_dir)
+            
+            # Copy all files except the fonts directory first
+            for item in os.listdir(static_files_dir):
+                if item != 'fonts':
+                    src = os.path.join(static_files_dir, item)
+                    dst = os.path.join(static_dir, item)
+                    if os.path.isdir(src):
+                        shutil.copytree(src, dst, dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(src, dst)
+            
+            # Copy fonts directory with all its contents
+            fonts_src = os.path.join(static_files_dir, 'fonts')
+            if os.path.exists(fonts_src):
+                fonts_dest = os.path.join(static_dir, 'fonts')
+                os.makedirs(fonts_dest, exist_ok=True)
+                for font_file in os.listdir(fonts_src):
+                    shutil.copy2(
+                        os.path.join(fonts_src, font_file),
+                        os.path.join(fonts_dest, font_file)
+                    )
+                self.stdout.write(self.style.SUCCESS('Copied font files'))
+        
+        # Create a request factory
+        self.factory = RequestFactory()
+        
+        try:
+            # Load the map config
+            self.load_config()
+            
+            # Export the root URL (homepage) first
+            self.export_page('', output_dir, self.config, 'index.html')
+            
+            # Create theme group index pages
+            for group in self.config.get('themeGroups', []):
+                group_id = group['id']
+                group_dir = output_dir / group_id
+                group_dir.mkdir(exist_ok=True)
+                
+                # Create index.html for the theme group
+                self.export_page(
+                    '', 
+                    output_dir, 
+                    self.config, 
+                    theme_group=group_id,
+                    output_filename=f"{group_id}/index.html"
+                )
+                
+                # Copy static files to the theme group directory
+                static_src = Path(settings.STATIC_ROOT or settings.STATICFILES_DIRS[0])
+                static_dest = group_dir / 'static'
+                if static_src.exists() and static_src.is_dir():
+                    if static_dest.exists():
+                        shutil.rmtree(static_dest)
+                    shutil.copytree(static_src, static_dest)
+                    self.stdout.write(self.style.SUCCESS(f'Copied static files to {static_dest}'))
+            
+            # Export each page from config with theme groups
+            for page_name in self.config.keys():
+                if page_name not in ['themes', 'indicators', 'themeGroups']:  # Skip special keys
+                    continue
+                
+                # Export the page with all themes
+                self.export_page(page_name, output_dir, self.config)
+                
+                # Export the page for each theme group
+                for group in self.config.get('themeGroups', []):
+                    group_id = group['id']
+                    group_dir = output_dir / group_id
+                    group_dir.mkdir(exist_ok=True)
+                    
+                    self.export_page(
+                        page_name, 
+                        output_dir, 
+                        self.config, 
+                        theme_group=group_id,
+                        output_filename=f"{group_id}/{page_name}.html"
+                    )
+                    
+                    # Ensure static files are copied for each theme group page
+                    static_src = Path(settings.STATIC_ROOT or settings.STATICFILES_DIRS[0])
+                    static_dest = group_dir / 'static'
+                    if not static_dest.exists() and static_src.exists() and static_src.is_dir():
+                        shutil.copytree(static_src, static_dest)
+                        self.stdout.write(self.style.SUCCESS(f'Copied static files to {static_dest}'))
+            
+            # Export themes page
+            self.export_page('themes', output_dir, self.config, 'themes.html')
+            
+            # Create a simple _redirects file for Netlify/Cloudflare Pages
+            with open(output_dir / '_redirects', 'w') as f:
+                f.write('/* /index.html 200\n')
+            
+            # Copy static files
+            self.copy_static_files(static_dir)
+            
+            # Create a simple 404 page
+            self.create_404_page(output_dir)
+            
+            self.stdout.write(self.style.SUCCESS(f'Successfully exported site to {output_dir}'))
+            
+        except Exception as e:
+            logger.error(f'Error during export: {str(e)}', exc_info=True)
+            self.stderr.write(self.style.ERROR(f'Error: {str(e)}'))
+            raise
+    
+    def load_config(self):
+        """Load the map configuration."""
+        config_path = Path(settings.BASE_DIR) / 'map_config.json'
+        try:
+            with open(config_path, 'r') as f:
+                self.config = json.load(f)
+        except FileNotFoundError:
+            self.stderr.write(self.style.ERROR('map_config.json not found!'))
+            self.config = {}
+    
+    def copy_static_files(self, static_dir):
+        """Copy all static files to the output directory."""
+        self.stdout.write('Copying static files...')
+        
+        # Ensure the static directory exists
+        static_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Copy static files from each app
+        for app in settings.INSTALLED_APPS:
+            if app.startswith('django.'):
+                continue
+                
+            try:
+                # Try to find the app's static directory
+                app_path = Path(app.replace('.', '/'))
+                app_static = app_path / 'static'
+                
+                # Handle case where app is in a different location (like site-packages)
+                if not app_static.exists():
+                    try:
+                        import importlib
+                        module = importlib.import_module(app)
+                        if hasattr(module, '__file__'):
+                            app_root = Path(module.__file__).parent
+                            app_static = app_root / 'static'
+                    except (ImportError, AttributeError):
+                        continue
+                
+                if app_static.exists() and app_static.is_dir():
+                    self.stdout.write(f'Copying static files from {app}...')
+                    for item in app_static.rglob('*'):
+                        try:
+                            if item.is_file() and not any(part.startswith(('.', '_')) for part in item.parts):
+                                rel_path = item.relative_to(app_static)
+                                dest_path = static_dir / rel_path
+                                dest_path.parent.mkdir(parents=True, exist_ok=True)
+                                shutil.copy2(item, dest_path)
+                        except Exception as e:
+                            self.stderr.write(f'Error copying {item}: {str(e)}')
+                            
+            except Exception as e:
+                self.stderr.write(f'Error processing app {app}: {str(e)}')
+        
+        # Copy project-wide static files
+        for static_dir_path in settings.STATICFILES_DIRS:
+            if not static_dir_path:
+                continue
+                
+            try:
+                static_path = Path(static_dir_path)
+                if static_path.exists() and static_path.is_dir():
+                    self.stdout.write(f'Copying project static files from {static_path}...')
+                    for item in static_path.rglob('*'):
+                        try:
+                            if item.is_file() and not any(part.startswith(('.', '_')) for part in item.parts):
+                                rel_path = item.relative_to(static_path)
+                                dest_path = static_dir / rel_path
+                                dest_path.parent.mkdir(parents=True, exist_ok=True)
+                                shutil.copy2(item, dest_path)
+                        except Exception as e:
+                            self.stderr.write(f'Error copying {item}: {str(e)}')
+            except Exception as e:
+                self.stderr.write(f'Error processing static directory {static_dir_path}: {str(e)}')
+        
+        # Copy admin static files
+        try:
+            from django.contrib import admin
+            admin_static = Path(admin.__file__).parent / 'static' / 'admin'
+            if admin_static.exists():
+                self.stdout.write('Copying admin static files...')
+                dest_admin = static_dir / 'admin'
+                if dest_admin.exists():
+                    shutil.rmtree(dest_admin)
+                shutil.copytree(admin_static, dest_admin)
+        except Exception as e:
+            self.stderr.write(f'Error copying admin static files: {str(e)}')
+        
+        self.stdout.write(self.style.SUCCESS(f'Successfully copied static files to {static_dir}'))
+    
+    def export_page(self, page_name, output_dir, config, output_filename=None, theme_group=None):
+        """Export a single page to a static HTML file."""
+        try:
+            # Determine the URL and output path
+            url = f'/{page_name}/' if page_name else '/'
+            
+            # Handle output filename based on theme group
+            if theme_group:
+                # Create a subdirectory for the theme group if it doesn't exist
+                theme_group_dir = output_dir / theme_group
+                theme_group_dir.mkdir(exist_ok=True)
+                
+                if not output_filename:
+                    output_filename = f"{theme_group}/index.html" if not page_name else f"{theme_group}/{page_name}.html"
+            else:
+                # Default behavior for no theme group
+                if page_name and not output_filename:
+                    output_filename = f'{page_name}.html'
+                else:
+                    output_filename = output_filename or 'index.html'
+                
+            # Ensure we're always writing to the root of output_dir
+            output_path = output_dir / output_filename
+            
+            self.stdout.write(f'Exporting {url} to {output_path}...')
+            
+            # Create the output directory if it doesn't exist
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Get the page data from config
+            page_data = config.get(page_name, {}) if (page_name and page_name in config) else {}
+            
+            # Get themes based on theme group filter
+            themes = config.get('themes', [])
+            if theme_group:
+                # Find the theme group and filter themes
+                theme_group_data = next(
+                    (g for g in config.get('themeGroups', []) if g['id'] == theme_group),
+                    None
+                )
+                if theme_group_data:
+                    theme_ids = set(theme_group_data.get('themeIds', []))
+                    themes = [t for t in themes if t.get('id') in theme_ids]
+            
+            # Prepare the context with themes and indicators
+            context = {
+                'page_name': page_name or 'Home',
+                'themes': themes,  # Filtered themes based on theme group
+                'indicators': {
+                    'all': config.get('indicators', {}),
+                    'page_name': page_data if isinstance(page_data, dict) else {}
+                },
+                'page_config': page_data if isinstance(page_data, dict) else {},
+                'STATIC_URL': '../static/' if theme_group else './static/'  # Adjust static URL based on theme group
+            }
+            
+            # Add map URLs if they exist
+            if isinstance(page_data, dict):
+                context.update({
+                    'map1_url': page_data.get('map1_url', ''),
+                    'map2_url': page_data.get('map2_url', '')
+                })
+            
+            # Render the template
+            try:
+                content = render_to_string('mapviewer/map.html', context)
+                
+                # Fix any remaining static file paths to be relative to the base URL
+                content = content.replace('href="/static/', 'href="static/')
+                content = content.replace('src="/static/', 'src="static/')
+                
+                # Ensure all static file paths are relative to the base URL
+                content = content.replace('href="static/', 'href="./static/')
+                content = content.replace('src="static/', 'src="./static/')
+                
+                # Fix any remaining absolute paths that might cause issues
+                content = content.replace('href="/', 'href="./')
+                
+                # For GitHub Pages, we need to set the base URL correctly
+                # Since we're using .html files in the root, we can use './' as the base
+                base_path = './'
+                
+                # Add base tag to fix relative paths
+                head_end = content.find('</head>')
+                if head_end > 0:
+                    base_tag = f'<base href="{base_path}">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n</head>'
+                    content = content[:head_end] + base_tag + content[head_end + 7:]
+                
+                # Write the content to a file
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                    
+            except Exception as e:
+                self.stderr.write(f'Error rendering {url}: {str(e)}')
+                raise
+                
+        except Exception as e:
+            self.stderr.write(f'Error exporting page {page_name}: {str(e)}')
+            raise
+    
+    def create_404_page(self, output_dir):
+        """Create a simple 404 page."""
+        try:
+            with open(output_dir / '404.html', 'w') as f:
+                f.write('''
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Page Not Found</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                        h1 { font-size: 50px; }
+                        a { color: #4CAF50; text-decoration: none; }
+                        .container { max-width: 800px; margin: 0 auto; }
+                    </style>
+                    <script>
+                        // Redirect to the main page
+                        window.onload = function() {
+                            // If we're in a theme group directory, redirect to its index
+                            const pathParts = window.location.pathname.split('/').filter(Boolean);
+                            if (pathParts.length > 0 && ['ecological', 'species', 'planning'].includes(pathParts[0])) {
+                                window.location.href = `/${pathParts[0]}/`;
+                            } else {
+                                window.location.href = '/';
+                            }
+                        };
+                    </script>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>404</h1>
+                        <p>Page not found. Redirecting you to the <a href="/">homepage</a>...</p>
+                    </div>
+                </body>
+                </html>
+                ''')
+        except Exception as e:
+            self.stderr.write(f'Error creating 404 page: {str(e)}')
