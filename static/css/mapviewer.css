@@ -401,9 +401,14 @@ body, html {
 
 .dropdown-item i {
   width: 20px;
+  height: 20px;
   margin-right: 5px;
   color: var(--primary);
   text-align: center;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dropdown-item i.fa-chevron-right {
@@ -961,9 +966,14 @@ body, html {
 
     .dropdown-item i {
         width: 20px;
+        height: 20px;
         margin-right: 10px;
         color: #4CAF50;
         text-align: center;
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .dropdown-item i.fa-chevron-right {

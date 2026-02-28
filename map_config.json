@@ -81,7 +81,7 @@
           "id": "02-01-habitat-values",
           "name": "Habitat Values",
           "description": "The intrinsic health of terrestrial and freshwater habitats and the benefits they provide through ecosystem services, such as clean air, water filtration, pollination, carbon storage, and the regulation of natural hazard processes related to climate change. Ecosystem values are used to monitor the relative impacts of landscape changes associated with human activities over time, and to help identify and prioritize conservation efforts that protect vulnerable wildlife habitat for the broadest possible range of native species.",
-          "icon": "icon-",
+          "icon": "icon-habitat-values",
           "indicators": [
             "02-01-01-land-cover",
             "02-01-02-ecosystem-services",
