@@ -249,7 +249,7 @@ body, html {
   min-width: 200px;
   box-shadow: var(--shadow);
   border-radius: var(--radius);
-  z-index: 10002;
+  z-index: 9999;
   max-height: 400px;
   overflow-y: auto;
   border: 1px solid var(--border);
@@ -258,7 +258,6 @@ body, html {
   transition: opacity 0.15s ease, transform 0.15s ease;
   pointer-events: none;
   display: block;
-  visibility: hidden;
 }
 
 .theme-collections-wrapper #themeCollectionsMenu.show {
@@ -266,7 +265,6 @@ body, html {
   transform: translateY(0);
   pointer-events: auto;
   display: block !important;
-  visibility: visible;
 }
 
 #themeCollectionsMenu a {
@@ -403,14 +401,9 @@ body, html {
 
 .dropdown-item i {
   width: 20px;
-  height: 20px;
   margin-right: 5px;
   color: var(--primary);
   text-align: center;
-  font-size: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .dropdown-item i.fa-chevron-right {
@@ -968,14 +961,9 @@ body, html {
 
     .dropdown-item i {
         width: 20px;
-        height: 20px;
         margin-right: 10px;
         color: #4CAF50;
         text-align: center;
-        font-size: 16px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
     }
 
     .dropdown-item i.fa-chevron-right {

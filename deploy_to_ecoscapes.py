@@ -46,9 +46,11 @@ def collect_static():
 
         shutil.copy('templates/mapviewer/map.html', os.path.join(group_dir, 'index.html'))
 
-        # Inject theme group logic
+        # Inject theme group logic and fix static paths
         with open(os.path.join(group_dir, 'index.html'), 'r+') as f:
             content = f.read()
+            content = content.replace("{% static '", "static/")
+            content = content.replace("' %}", "")
             content = content.replace("<script>", f"""
             <script>
             if (!window.location.search.includes('theme_group=')) {{
@@ -64,6 +66,15 @@ def collect_static():
     # Default "all themes" version
     os.makedirs('docs/all', exist_ok=True)
     shutil.copy('templates/mapviewer/map.html', 'docs/all/index.html')
+    
+    # Fix static paths for all themes version
+    with open('docs/all/index.html', 'r+') as f:
+        content = f.read()
+        content = content.replace("{% static '", "static/")
+        content = content.replace("' %}", "")
+        f.seek(0)
+        f.write(content)
+        f.truncate()
 
     # Copy map config
     shutil.copy('map_config.json', 'docs/map_config.json')
