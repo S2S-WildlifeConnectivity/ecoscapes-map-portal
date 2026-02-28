@@ -146,7 +146,8 @@ body, html {
 .view-mode-btn,
 .fullscreen-btn,
 .toggle-info-btn,
-.git-hub-link-btn {
+.git-hub-link-btn,
+.theme-collections-btn {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -177,7 +178,9 @@ body, html {
 .toggle-info-btn:hover,
 .toggle-info-btn:focus,
 .git-hub-link-btn:hover,
-.git-hub-link-btn:focus {
+.git-hub-link-btn:focus,
+.theme-collections-btn:hover,
+.theme-collections-btn:focus {
   border-color: var(--primary);
   background-color: var(--bg-hover);
   color: var(--primary);
@@ -190,7 +193,8 @@ body, html {
 .view-mode-btn i,
 .fullscreen-btn i,
 .toggle-info-btn i,
-.git-hub-link-btn i {
+.git-hub-link-btn i,
+.theme-collections-btn i {
   font-size: 1.1em;
 }
 
@@ -228,6 +232,63 @@ body, html {
 
 .view-mode-btn i {
   /* Inherited from Right Navigation Buttons icon styles */
+}
+
+/* Theme Collections Dropdown Wrapper */
+.theme-collections-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Theme Collections Dropdown Menu */
+.theme-collections-wrapper #themeCollectionsMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background-color: var(--white);
+  min-width: 200px;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  z-index: 9999;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+  display: block;
+}
+
+.theme-collections-wrapper #themeCollectionsMenu.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  display: block !important;
+}
+
+#themeCollectionsMenu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+  font-size: var(--font-size-md);
+}
+
+#themeCollectionsMenu a:hover,
+#themeCollectionsMenu a:focus {
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+#themeCollectionsMenu a i {
+  width: 16px;
+  text-align: center;
+  color: var(--primary);
 }
 
 .fullscreen-btn:hover,

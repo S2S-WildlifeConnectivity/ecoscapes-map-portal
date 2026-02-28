@@ -59,14 +59,22 @@
             <i class="fa-solid fa-magnifying-glass-chart"></i>
           </button>
           <button id="toggleInfoBox" class="toggle-info-btn" data-tooltip="Hide Information Pane">
-            <i class="fa-solid fa-eye-slash"></i>
+            <i class="fas fa-eye-slash"></i>
           </button>
           <button id="fullscreen" class="fullscreen-btn" data-tooltip="Open Full Screen in new tab">
-            <i class="fas fa-maximize"></i>
+            <i class="fas fa-expand"></i>
           </button>
           <button id="helpModal" class="help-modal-btn" data-tooltip="Help & Documentation">
             <i class="fas fa-question-circle"></i>
           </button>
+          <div class="theme-collections-wrapper">
+            <button id="themeCollections" class="theme-collections-btn" data-tooltip="Theme Collections">
+              <i class="fas fa-star"></i>
+            </button>
+            <div class="dropdown-menu" id="themeCollectionsMenu" role="menu">
+                <!-- Populated by JavaScript -->
+            </div>
+          </div>
           <button id="darkModeToggle" class="dark-mode-toggle" data-tooltip="Toggle Dark Mode">
             <i class="fas fa-moon"></i>
           </button>
@@ -627,6 +635,69 @@
             document.querySelectorAll('.dropdown').forEach(dropdown => {
                 dropdown._dropdownInstance = new Dropdown(dropdown);
             });
+            
+            // Theme collections dropdown functionality
+            const themeCollectionsBtn = document.getElementById('themeCollections');
+            const themeCollectionsMenu = document.getElementById('themeCollectionsMenu');
+            
+            console.log('Theme collections elements found:', {
+                button: !!themeCollectionsBtn,
+                menu: !!themeCollectionsMenu
+            });
+            
+            if (themeCollectionsBtn && themeCollectionsMenu) {
+                const themeGroups = [
+                    {% for group in map_config.themeGroups %}
+                    {
+                        id: '{{ group.id }}',
+                        name: '{{ group.name }}',
+                        icon: '{{ group.icon }}',
+                        themeIds: {{ group.themeIds|safe }}
+                    },
+                    {% endfor %}
+                ];
+                
+                // Populate menu
+                themeGroups.forEach(group => {
+                    const link = document.createElement('a');
+                    link.href = `${window.location.origin}${window.location.pathname}?theme_group=${group.id}`;
+                    link.innerHTML = `<i class="fas ${group.icon}"></i>${group.name}`;
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        window.location.href = `${window.location.origin}${window.location.pathname}?theme_group=${group.id}`;
+                    });
+                    themeCollectionsMenu.appendChild(link);
+                });
+                
+                console.log('Theme collections menu populated with', themeGroups.length, 'items');
+                console.log('Menu HTML:', themeCollectionsMenu.innerHTML);
+                
+                // Toggle dropdown on button click
+                themeCollectionsBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    console.log('Theme collections button clicked!');
+                    const isVisible = themeCollectionsMenu.classList.contains('show');
+                    console.log('Menu currently visible:', isVisible);
+                    
+                    if (isVisible) {
+                        themeCollectionsMenu.classList.remove('show');
+                        document.removeEventListener('click', closeThemeCollections);
+                    } else {
+                        themeCollectionsMenu.classList.add('show');
+                        console.log('Added show class. Menu classes:', themeCollectionsMenu.className);
+                        setTimeout(() => {
+                            document.addEventListener('click', closeThemeCollections);
+                        }, 100);
+                    }
+                });
+                
+                function closeThemeCollections(e) {
+                    if (!themeCollectionsBtn.contains(e.target) && !themeCollectionsMenu.contains(e.target)) {
+                        themeCollectionsMenu.classList.remove('show');
+                        document.removeEventListener('click', closeThemeCollections);
+                    }
+                }
+            }
             
             // Reset filters functionality
             const resetFiltersBtn = document.getElementById('resetFilters');
@@ -1742,7 +1813,7 @@ If you continue to experience issues, please refresh the page or contact support
                 };
                 
                 const groupName = themeGroups[themeGroupId];
-                if (groupName) {
+                if (groupName && themeGroupId !== 'all-themes') {
                     toastManager.info(
                         `You're viewing a curated selection of ${groupName.toLowerCase()} themes. Not all available themes are shown. <a href="${window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/')}" style="color: inherit; text-decoration: underline;">Click here</a> to view all.`,
                         `${groupName} Collection`,

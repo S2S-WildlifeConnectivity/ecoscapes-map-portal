@@ -1,6 +1,12 @@
 {
   "themeGroups": [
     {
+      "id": "all-themes",
+      "name": "All Themes",
+      "icon": "fa-solid fa-check-double",
+      "themeIds": ["01-ecosystem-resileince", "02-ecosystem-health", "03-biogeoclimatic-zones", "04-focal-species", "05-climate-change-refugia", "06-connectivity-network", "07-habitat-cores", "08-wildlife-corridors", "09-resistance-to-movement"]
+    },
+    {
       "id": "biodiversity",
       "name": "Biodiversity",
       "icon": "fa-leaf",
@@ -15,7 +21,7 @@
     {
       "id": "featured",
       "name": "Featured",
-      "icon": "fa-paw",
+      "icon": "fa-star",
       "themeIds": ["01-ecosystem-resileince", "04-focal-species"]
     }
   ],
