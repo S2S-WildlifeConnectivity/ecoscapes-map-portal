@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "EcoScapes Map Application",
   "scripts": {
-    "build:icons": "fantasticon --config fantasticon-config.js"
+    "update:icons": "./update-icons.sh",
+    "icons": "./update-icons.sh"
   },
-  "devDependencies": {
-    "fantasticon": "^3.0.0"
-  }
+  "devDependencies": {}
 }
