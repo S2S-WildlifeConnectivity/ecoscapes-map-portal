@@ -8,9 +8,15 @@
     },
     {
       "id": "connectivity",
-      "name": "Species",
+      "name": "Connectivity",
       "icon": "fa-paw",
       "themeIds": ["07-habitat-cores", "08-wildlife-corridors", "06-connectivity-network"]
+    },
+    {
+      "id": "featured",
+      "name": "Featured",
+      "icon": "fa-paw",
+      "themeIds": ["01-ecosystem-resileince", "04-focal-species"]
     }
   ],
   "themes": [
@@ -517,7 +523,7 @@
       "unit_of_measure": "relative index value (0-100)",
       "icon": "icon-fores-harvest",
       "map1_url": "https://felt.com/embed/map/Forest-Change-40yr-Trends-6173igyHQKu3u1o3eg9BloA?loc=50.117%2C-123.056%2C7.73z&legend=1&cooperativeGestures=0&link=1&geolocation=0&zoomControls=1&scaleBar=1",
-      "map2_url": "https://felt.com/embed/map/Forest-Change-40yr-Trends-6173igyHQKu3u1o3eg9BloA?loc=50.117%2C-123.056%2C7.73z&legend=1&cooperativeGestures=0&link=1&geolocation=0&zoomControls=1&scaleBar=1"
+      "map2_url": ""
     },
     "02-02-03-invasive-species": {
       "title": "Invasive Species",

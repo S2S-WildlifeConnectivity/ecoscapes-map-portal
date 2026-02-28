@@ -12,13 +12,14 @@
     <link rel="stylesheet" href="{% static 'css/mapviewer.css' %}">
 </head>
 <body>
+    
     <div class="app-container">
       <!-- Top Toolbar with Dropdowns -->
       <div class="toolbar-top">
         <!-- Theme Dropdown -->
         <div class="dropdown" id="themeDropdown">
           <p><strong>Step 1:</strong> Choose a Theme: </p>
-          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" data-tooltip="Themes are broad groups of datasets.">
             <span>Select Theme</span>
             <i class="dd-chevron fas fa-chevron-down"></i>
           </button>
@@ -30,7 +31,7 @@
         <!-- Subtheme Dropdown (initially hidden) -->
         <div class="dropdown" id="subthemeDropdown">
           <p><strong>Step 2:</strong> Choose a Sub-theme: </p>
-          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" data-tooltip="Sub-themes refine the selection to related indicators.">
             <span>Select Sub-theme</span>
             <i class="dd-chevron fas fa-chevron-down"></i>
           </button>
@@ -42,7 +43,7 @@
         <!-- Indicator Dropdown (initially hidden) -->
         <div class="dropdown" id="indicatorDropdown">
           <p><strong>Step 3:</strong> Choose an Indicator: </p>
-          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+          <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false" data-tooltip="Indicators are the quantitative data layers.">
             <span>Select Indicator</span>
             <i class="dd-chevron fas fa-chevron-down"></i>
           </button>
@@ -127,6 +128,8 @@
         <!-- Right column: map -->
         <div class="map-column">
           <div class="map-container">
+            <!-- Toast Container -->
+            <div id="toastContainer" class="toast-container"></div>
             <div id="mapPlaceholder" class="map-placeholder">
               <div class="placeholder-content">
                 <i class="fas fa-map-marked-alt map-marker-icon"></i>
@@ -147,6 +150,155 @@
       <script>
         // Global tooltip reference for theme switching
         let currentTooltip = null;
+        
+        // Toast Notification System
+        class ToastManager {
+            constructor() {
+                this.container = document.getElementById('toastContainer');
+                this.toasts = new Map();
+            }
+            
+            show(message, type = 'info', title = null, duration = 8000) {
+                const toastId = Date.now();
+                const toast = this.createToast(toastId, title, message, type);
+                
+                this.container.appendChild(toast);
+                this.toasts.set(toastId, {
+                    element: toast,
+                    timeoutId: null,
+                    duration: duration,
+                    startTime: Date.now(),
+                    pausedTime: 0
+                });
+                
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    toast.classList.add('show');
+                });
+                
+                // Set up auto-dismiss
+                this.startAutoDismiss(toastId);
+                
+                return toastId;
+            }
+            
+            startAutoDismiss(toastId) {
+                const toastData = this.toasts.get(toastId);
+                if (!toastData) return;
+                
+                // Clear any existing timeout
+                if (toastData.timeoutId) {
+                    clearTimeout(toastData.timeoutId);
+                }
+                
+                // Calculate remaining time
+                const elapsedTime = toastData.pausedTime + (Date.now() - toastData.startTime);
+                const remainingTime = Math.max(0, toastData.duration - elapsedTime);
+                
+                if (remainingTime > 0) {
+                    toastData.timeoutId = setTimeout(() => {
+                        this.remove(toastId);
+                    }, remainingTime);
+                } else {
+                    this.remove(toastId);
+                }
+            }
+            
+            pauseAutoDismiss(toastId) {
+                const toastData = this.toasts.get(toastId);
+                if (!toastData || !toastData.timeoutId) return;
+                
+                // Clear the timeout
+                clearTimeout(toastData.timeoutId);
+                toastData.timeoutId = null;
+                
+                // Track how long we've been paused
+                toastData.pausedTime += Date.now() - toastData.startTime;
+            }
+            
+            resumeAutoDismiss(toastId) {
+                const toastData = this.toasts.get(toastId);
+                if (!toastData || toastData.timeoutId) return;
+                
+                // Reset start time to now
+                toastData.startTime = Date.now();
+                
+                // Restart the timer
+                this.startAutoDismiss(toastId);
+            }
+            
+            remove(toastId) {
+                const toastData = this.toasts.get(toastId);
+                if (toastData) {
+                    // Clear any pending timeout
+                    if (toastData.timeoutId) {
+                        clearTimeout(toastData.timeoutId);
+                    }
+                    
+                    const toast = toastData.element;
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                        this.toasts.delete(toastId);
+                    }, 300);
+                }
+            }
+            
+            createToast(toastId, title, message, type) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.dataset.toastId = toastId;
+                toast.dataset.createdAt = Date.now(); // Store creation time for pause/resume logic
+                
+                const iconMap = {
+                    'info': 'fa-info-circle',
+                    'success': 'fa-check-circle',
+                    'warning': 'fa-exclamation-triangle'
+                };
+                
+                toast.innerHTML = `
+                    <div class="toast-icon">
+                        <i class="fas ${iconMap[type] || iconMap.info}"></i>
+                    </div>
+                    <div class="toast-content">
+                        ${title ? `<div class="toast-title">${title}</div>` : ''}
+                        <div class="toast-message">${message}</div>
+                    </div>
+                    <button class="toast-close" onclick="toastManager.remove(${toastId})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                // Add hover event listeners to pause/resume auto-dismiss
+                toast.addEventListener('mouseenter', () => {
+                    this.pauseAutoDismiss(toastId);
+                });
+                
+                toast.addEventListener('mouseleave', () => {
+                    this.resumeAutoDismiss(toastId);
+                });
+                
+                return toast;
+            }
+            
+            // Convenience methods
+            info(message, title = null, duration = 10000) {
+                return this.show(message, 'info', title, duration);
+            }
+            
+            success(message, title = null, duration = 10000) {
+                return this.show(message, 'success', title, duration);
+            }
+            
+            warning(message, title = null, duration = 10000) {
+                return this.show(message, 'warning', title, duration);
+            }
+        }
+        
+        // Global toast manager instance
+        const toastManager = new ToastManager();
         
         // Dark Mode Toggle Functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -641,8 +793,17 @@
                     // Position and show immediately
                     function positionTooltip(e) {
                         if (currentTooltip) {
-                            currentTooltip.style.left = e.pageX + 'px';
-                            currentTooltip.style.top = (e.pageY - 40) + 'px';
+                            // Use requestAnimationFrame for smoother positioning
+                            requestAnimationFrame(() => {
+                                if (!currentTooltip) return;
+                                
+                                const tooltipWidth = currentTooltip.offsetWidth;
+                                const left = e.pageX + (tooltipWidth / 2);
+                                const top = e.pageY - 40;
+                                
+                                currentTooltip.style.left = left + 'px';
+                                currentTooltip.style.top = top + 'px';
+                            });
                         }
                     }
                     
@@ -914,6 +1075,16 @@ If you continue to experience issues, please refresh the page or contact support
                 const toggleIcon = viewModeToggle.querySelector('i');
                 
                 if (isExploreMode) {
+                    // Check if analyze mode is available for current indicator
+                    if (currentIndicator && !currentIndicator.map2_url) {
+                        // Show toast notification that analyze mode is not available
+                        toastManager.warning(
+                            `We do not time series data for "${currentIndicator.title}". Only explore mode is supported.`,
+                            'Explore Only Data Layer'
+                        );
+                        return; // Don't switch modes
+                    }
+                    
                     // Switch to analyze mode
                     map1.style.display = 'none';
                     map2.style.display = 'block';
@@ -1306,15 +1477,43 @@ If you continue to experience issues, please refresh the page or contact support
                 // Clear and populate indicators
                 indicatorMenu.innerHTML = '';
                 console.log('Populating indicators for subtheme:', subtheme.name, 'indicators:', subtheme.indicators);
-                subtheme.indicators.forEach(indicator => {
-                    console.log('Creating dropdown item for indicator:', indicator.title, 'id:', indicator.id);
-                    const item = createDropdownItem(indicator.title, indicator.icon || 'icon-question', (e) => {
+                
+                // Check if there's only one indicator and auto-select it
+                if (subtheme.indicators.length === 1) {
+                    const singleIndicator = subtheme.indicators[0];
+                    console.log('Auto-selecting single indicator:', singleIndicator.title);
+                    
+                    // Still populate the dropdown (in case user wants to see it)
+                    const item = createDropdownItem(singleIndicator.title, singleIndicator.icon || 'icon-question', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        selectIndicator(indicator);
+                        selectIndicator(singleIndicator);
                     });
                     indicatorMenu.appendChild(item);
-                });
+                    
+                    // Auto-select the single indicator after a short delay
+                    setTimeout(() => {
+                        selectIndicator(singleIndicator);
+                        console.log('Auto-selected indicator:', singleIndicator.title);
+                        
+                        // Show toast notification for auto-population
+                        toastManager.info(
+                            `Auto-selected "${singleIndicator.title}" since it's the only available indicator for this sub-theme.`,
+                            'Auto-populated'
+                        );
+                    }, 100);
+                } else {
+                    // Multiple indicators - populate dropdown normally
+                    subtheme.indicators.forEach(indicator => {
+                        console.log('Creating dropdown item for indicator:', indicator.title, 'id:', indicator.id);
+                        const item = createDropdownItem(indicator.title, indicator.icon || 'icon-question', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            selectIndicator(indicator);
+                        });
+                        indicatorMenu.appendChild(item);
+                    });
+                }
                 
                 // Close all dropdowns using the Dropdown class if available
                 if (window.Dropdown) {
@@ -1530,6 +1729,28 @@ If you continue to experience issues, please refresh the page or contact support
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if we're in a theme group filtered view and show toast
+            const urlParams = new URLSearchParams(window.location.search);
+            const themeGroupId = urlParams.get('theme_group');
+            
+            if (themeGroupId) {
+                // Get theme groups from the map config data passed to the template
+                const themeGroups = {
+                    {% for group in map_config.themeGroups %}
+                        '{{ group.id }}': '{{ group.name }}',
+                    {% endfor %}
+                };
+                
+                const groupName = themeGroups[themeGroupId];
+                if (groupName) {
+                    toastManager.info(
+                        `You're viewing a curated selection of ${groupName.toLowerCase()} themes. Not all available themes are shown. <a href="${window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/')}" style="color: inherit; text-decoration: underline;">Click here</a> to view all.`,
+                        `${groupName} Collection`,
+                        8000
+                    );
+                }
+            }
+            
             // Enhanced dropdown functionality
             class Dropdown {
                 constructor(element) {

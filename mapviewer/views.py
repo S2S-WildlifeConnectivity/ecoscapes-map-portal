@@ -114,6 +114,7 @@ def map_view(request, page_name='default'):
         'page_name': page_name,
         'themes': themes,
         'current_theme': current_theme,  # Add current theme to context
+        'map_config': config,  # Add full config for theme groups access
         'indicators': {
             'all': indicators,  # All indicators for the dropdown (flattened)
             'page_name': page_config  # Current page configuration
