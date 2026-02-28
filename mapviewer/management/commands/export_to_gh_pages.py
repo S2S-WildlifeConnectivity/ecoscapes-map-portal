@@ -289,6 +289,7 @@ class Command(BaseCommand):
                     'page_name': page_data if isinstance(page_data, dict) else {}
                 },
                 'page_config': page_data if isinstance(page_data, dict) else {},
+                'map_config': config,  # Add the full config for theme collections dropdown
                 'STATIC_URL': '../static/' if theme_group else './static/'  # Adjust static URL based on theme group
             }
             
