@@ -751,6 +751,25 @@ body, html {
     padding: 10px 15px;
     gap: 10px;
   }
+  
+  /* Theme collections dropdown mobile fixes */
+  .theme-collections-wrapper {
+    position: relative;
+  }
+  
+  .theme-collections-wrapper #themeCollectionsMenu {
+    right: 0;
+    left: auto;
+    min-width: 180px;
+    font-size: 0.9em;
+    max-width: 90vw;
+    box-sizing: border-box;
+  }
+  
+  .theme-collections-wrapper #themeCollectionsMenu a {
+    padding: 8px 12px;
+    font-size: 0.9em;
+  }
 }
     
     /* Map Elements */
