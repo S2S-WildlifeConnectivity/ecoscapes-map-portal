@@ -1239,19 +1239,19 @@ body, html {
         .indicator-icon,
         .theme-icon,
         .subtheme-icon {
-          font-size: 16rem;
-          color: #4CAF5026;
+          font-size: 3.6rem;
+          color: #4CAF50;
           margin: 0;
           display: flex;
-          align-items: center;
-          justify-content: center;
+          align-items: flex-start;
+          justify-content: flex-end;
           transition: all 0.2s ease;
-          opacity: 1;
+          opacity: 0.75;
           width: auto;
           height: auto;
           position: absolute;
-          top: 20px;
-          right: 20px;
+          top: 0px;
+          right: 0px;
           z-index: 0;
         }
 
@@ -1271,7 +1271,7 @@ body, html {
     .indicator-info:hover .indicator-icon,
     .theme-info:hover .theme-icon,
     .subtheme-info:hover .subtheme-icon {
-        font-size: 16.5em;
+        opacity: 1;
     }
 
     /* Title Styles */
