@@ -2629,11 +2629,7 @@ If you continue to experience issues, please refresh the page or contact support
             camera.setAttribute('position', '0 1.6 0');
             camera.setAttribute('cursor', 'rayOrigin: mouse');
             
-            // Add cursor for interaction
-            const cursor = document.createElement('a-cursor');
-            cursor.setAttribute('animation__click', 'property: scale; start: 0.1; to: 1; dur: 150; begin: click; easing: easeOutCubic');
-            cursor.setAttribute('geometry', 'primitive: ring; radiusInner: 0.005; radiusOuter: 0.01');
-            cursor.setAttribute('material', 'color: white; shader: flat; opacity: 0.8');
+            // Add cursor for interactionty: 0.8');git a
             cursor.setAttribute('raycaster', 'objects: .clickable');
             
             camera.appendChild(cursor);

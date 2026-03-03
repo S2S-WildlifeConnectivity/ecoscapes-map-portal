@@ -307,10 +307,13 @@ class Command(BaseCommand):
                 # Fix any remaining static file paths to be relative to the base URL
                 content = content.replace('href="/static/', 'href="static/')
                 content = content.replace('src="/static/', 'src="static/')
-                
+
                 # Ensure all static file paths are relative to the base URL
                 content = content.replace('href="static/', 'href="./static/')
                 content = content.replace('src="static/', 'src="./static/')
+
+                # Rewrite Django API endpoints to static file equivalents for the static export
+                content = content.replace("fetch('/api/panorama-config/')", "fetch('./static/assets/360/panorama-config.json')")
                 
                 # Fix any remaining absolute paths that might cause issues
                 content = content.replace('href="/', 'href="./')
