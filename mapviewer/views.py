@@ -4,6 +4,16 @@ from django.conf import settings
 from django.http import JsonResponse, Http404
 from django.shortcuts import render
 
+
+def panorama_config(request):
+    config_path = os.path.join(settings.BASE_DIR, 'static', 'assets', '360', 'panorama-config.json')
+    try:
+        with open(config_path, 'r') as f:
+            data = json.load(f)
+        return JsonResponse(data)
+    except FileNotFoundError:
+        return JsonResponse({'pins': []}, status=404)
+
 def load_map_config():
     config_path = os.path.join(settings.BASE_DIR, 'map_config.json')
     try:
@@ -25,10 +35,7 @@ def map_view(request, page_name='default'):
         for group in config['themeGroups']:
             if group['id'] == theme_group_id:
                 theme_ids_to_include = set(group['themeIds'])
-                print(f"Theme group '{theme_group_id}' found. Including themes: {theme_ids_to_include}")
                 break
-        else:
-            print(f"Theme group '{theme_group_id}' not found in config")
     
     # Handle both old and new config formats
     if 'themes' in config:  # New format with themes
@@ -48,7 +55,6 @@ def map_view(request, page_name='default'):
         for theme in config.get('themes', []):
             # Skip themes not in the selected theme group (if a group was specified)
             if theme_ids_to_include is not None and theme['id'] not in theme_ids_to_include:
-                print(f"Skipping theme {theme['id']} as it's not in the selected group")
                 continue
                 
             theme_data = theme.copy()

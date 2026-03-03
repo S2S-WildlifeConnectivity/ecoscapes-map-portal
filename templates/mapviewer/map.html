@@ -694,11 +694,6 @@
             const themeCollectionsBtn = document.getElementById('themeCollections');
             const themeCollectionsMenu = document.getElementById('themeCollectionsMenu');
             
-            console.log('Theme collections elements found:', {
-                button: !!themeCollectionsBtn,
-                menu: !!themeCollectionsMenu
-            });
-            
             if (themeCollectionsBtn && themeCollectionsMenu) {
                 const themeGroups = [
                     {% for group in map_config.themeGroups %}
@@ -723,22 +718,16 @@
                     themeCollectionsMenu.appendChild(link);
                 });
                 
-                console.log('Theme collections menu populated with', themeGroups.length, 'items');
-                console.log('Menu HTML:', themeCollectionsMenu.innerHTML);
-                
                 // Toggle dropdown on button click
                 themeCollectionsBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    console.log('Theme collections button clicked!');
                     const isVisible = themeCollectionsMenu.classList.contains('show');
-                    console.log('Menu currently visible:', isVisible);
-                    
+
                     if (isVisible) {
                         themeCollectionsMenu.classList.remove('show');
                         document.removeEventListener('click', closeThemeCollections);
                     } else {
                         themeCollectionsMenu.classList.add('show');
-                        console.log('Added show class. Menu classes:', themeCollectionsMenu.className);
                         setTimeout(() => {
                             document.addEventListener('click', closeThemeCollections);
                         }, 100);
@@ -1290,6 +1279,7 @@ If you continue to experience issues, please refresh the page or contact support
             let currentTheme = null;
             let currentSubtheme = null;
             let currentIndicator = null;
+            let currentView = null;
             
             // Function to update URL with current state
             function updateURL() {
@@ -1297,15 +1287,6 @@ If you continue to experience issues, please refresh the page or contact support
                 if (currentTheme) params.set('theme', currentTheme.id);
                 if (currentSubtheme) params.set('subtheme', currentSubtheme.id);
                 if (currentIndicator) params.set('indicator', currentIndicator.id);
-                
-                // Debug logging
-                console.log('updateURL called:', {
-                    currentTheme: currentTheme?.id,
-                    currentSubtheme: currentSubtheme?.id,
-                    currentIndicator: currentIndicator?.id,
-                    currentIndicatorObject: currentIndicator,
-                    paramsString: params.toString()
-                });
                 
                 const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
                 window.history.pushState({}, '', newUrl);
@@ -1361,18 +1342,11 @@ If you continue to experience issues, please refresh the page or contact support
 
             // Initialize dropdowns and load state from URL
             function initDropdowns() {
-                console.log('initDropdowns called');
-                console.log('themesData:', themesData);
-                console.log('Number of themes:', themesData.length);
-                
                 // Load state from URL after a short delay to ensure DOM is ready
                 setTimeout(loadStateFromURL, 100);
                 // Populate themes
-                themesData.forEach((theme, index) => {
-                    console.log(`Theme ${index}:`, theme.name, 'Icon:', theme.icon, 'Icon type:', typeof theme.icon);
-                    // Use the same logic as the theme info box: getIconClass(theme.icon)
+                themesData.forEach((theme) => {
                     const themeIcon = getIconClass(theme.icon);
-                    console.log('Using theme icon:', themeIcon);
                     const item = createDropdownItem(theme.name, themeIcon, () => {
                         selectTheme(theme);
                     });
@@ -1406,9 +1380,7 @@ If you continue to experience issues, please refresh the page or contact support
                 const item = document.createElement('a');
                 item.href = '#';
                 item.className = 'dropdown-item';
-                
-                console.log('Creating dropdown item:', text, 'Icon:', icon);
-                
+
                 // Use the same structure as info boxes: <i class="icon [icon-class]"></i>
                 item.innerHTML = `
                     <i class="icon ${icon}"></i>
@@ -1601,13 +1573,11 @@ If you continue to experience issues, please refresh the page or contact support
                 
                 // Clear and populate indicators
                 indicatorMenu.innerHTML = '';
-                console.log('Populating indicators for subtheme:', subtheme.name, 'indicators:', subtheme.indicators);
-                
+
                 // Check if there's only one indicator and auto-select it
                 if (subtheme.indicators.length === 1) {
                     const singleIndicator = subtheme.indicators[0];
-                    console.log('Auto-selecting single indicator:', singleIndicator.title);
-                    
+
                     // Still populate the dropdown (in case user wants to see it)
                     const item = createDropdownItem(singleIndicator.title, singleIndicator.icon || 'icon-question', (e) => {
                         e.preventDefault();
@@ -1619,8 +1589,7 @@ If you continue to experience issues, please refresh the page or contact support
                     // Auto-select the single indicator after a short delay
                     setTimeout(() => {
                         selectIndicator(singleIndicator);
-                        console.log('Auto-selected indicator:', singleIndicator.title);
-                        
+
                         // Show toast notification for auto-population
                         toastManager.info(
                             `Auto-selected "${singleIndicator.title}" since it's the only available indicator for this sub-theme.`,
@@ -1630,7 +1599,6 @@ If you continue to experience issues, please refresh the page or contact support
                 } else {
                     // Multiple indicators - populate dropdown normally
                     subtheme.indicators.forEach(indicator => {
-                        console.log('Creating dropdown item for indicator:', indicator.title, 'id:', indicator.id);
                         const item = createDropdownItem(indicator.title, indicator.icon || 'icon-question', (e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -1656,14 +1624,8 @@ If you continue to experience issues, please refresh the page or contact support
                 updateURL();
             }
 
-            // Find theme by ID
-            function findThemeById(themeId) {
-                return themesData.find(theme => theme.id === themeId);
-            }
-
             // Indicator selected
             function selectIndicator(indicator) {
-                console.log('selectIndicator called with:', indicator);
                 currentIndicator = indicator;
                 
                 // Update indicator button
@@ -1729,7 +1691,6 @@ If you continue to experience issues, please refresh the page or contact support
                 const mapPlaceholder = document.getElementById('mapPlaceholder');
                 
                 if (indicator && indicator.map1_url) {
-                    console.log('Loading map with URL:', indicator.map1_url);
                     // Get the loading spinner
                     const loadingSpinner = document.getElementById('loadingSpinner');
                     
@@ -1765,17 +1726,15 @@ If you continue to experience issues, please refresh the page or contact support
                     
                     // Set up map2 if URL exists
                     if (indicator.map2_url) {
-                        console.log('Setting up map2 with URL:', indicator.map2_url);
                         map2.onload = function() {
                             // Additional map2 loaded logic if needed
                         };
                         map2.src = indicator.map2_url;
                         map2.style.display = 'none'; // Will be shown when toggled
                     } else {
-                        console.log('No map2_url found for this indicator');
                         map2.style.display = 'none';
                     }
-                    
+
                     // Set active view to explore (with proper null checks)
                     const exploreLabel = document.querySelector('.view-label.explore');
                     const analyzeLabel = document.querySelector('.view-label.analyze');
@@ -1786,14 +1745,12 @@ If you continue to experience issues, please refresh the page or contact support
                     if (viewToggle) viewToggle.checked = false;
                     currentView = 'explore';
                 } else {
-                    console.log('No map1_url found for this indicator');
                     // No map URL, show placeholder
                     mapPlaceholder.style.display = 'flex';
                     map1.style.display = 'none';
                     map2.style.display = 'none';
                 }
                 
-                console.log('About to call updateURL from selectIndicator');
                 // Update URL with current selection
                 updateURL();
                 
@@ -1843,7 +1800,7 @@ If you continue to experience issues, please refresh the page or contact support
             // Verify the message is from a trusted origin
             if (event.origin === 'https://newdev.naturesquamish.ca') {
               if (event.data.type === 'NAVIGATION_COMPLETE') {
-                console.log('Successfully navigated to resources section');
+                // Navigation complete
               }
             }
           });
@@ -2111,20 +2068,6 @@ If you continue to experience issues, please refresh the page or contact support
             const postsContainer = document.getElementById('postsList');
             const loadingElement = document.getElementById('loadingPosts');
             
-            // Debug function to log API responses
-            async function debugFetch(url) {
-                try {
-                    console.log('Fetching:', url);
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    console.log('Response from', url, ':', data);
-                    return { response, data };
-                } catch (error) {
-                    console.error('Error in debugFetch:', error);
-                    throw error;
-                }
-            }
-            
             // Function to format date
             function formatDate(dateString) {
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -2297,14 +2240,12 @@ If you continue to experience issues, please refresh the page or contact support
                 
                 try {
                     if (!indicator || !indicator.posts) {
-                        console.log('No posts filter defined for this indicator');
                         if (postsContainer) postsContainer.innerHTML = '<p>No posts configuration found for this indicator.</p>';
                         return;
                     }
 
                     // Convert the posts string to a slug format
                     const tagSlug = indicator.posts.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-                    console.log('Searching for WordPress posts with tag slug:', tagSlug);
                     
                     // Add timeout for the fetch request
                     const controller = new AbortController();
@@ -2322,17 +2263,14 @@ If you continue to experience issues, please refresh the page or contact support
                     }
                     
                     const tags = await tagResponse.json();
-                    console.log('Found matching tags:', tags);
-                    
+
                     if (!tags || tags.length === 0) {
-                        console.warn(`No matching tags found for: ${tagSlug}`);
                         if (postsContainer) postsContainer.innerHTML = `<p>No posts found for: ${indicator.posts}</p>`;
                         return;
                     }
                     
                     const tagId = tags[0].id;
-                    console.log(`Found tag ID ${tagId} for "${tagSlug}"`);
-                    
+
                     // Fetch posts with excerpts and featured image
                     const postsResponse = await fetch(
                         `https://newdev.naturesquamish.ca/wp-json/wp/v2/posts?tags=${tagId}` +
@@ -2347,8 +2285,7 @@ If you continue to experience issues, please refresh the page or contact support
                     }
                     
                     const posts = await postsResponse.json();
-                    console.log(`Fetched ${posts.length} posts for tag ID ${tagId}`);
-                    
+
                     if (posts.length === 0) {
                         if (postsContainer) postsContainer.innerHTML = '<p>No updates available at the moment.</p>';
                         return;
@@ -2458,7 +2395,6 @@ If you continue to experience issues, please refresh the page or contact support
             
             // 360° button click handler
             panoramaBtn.addEventListener('click', function() {
-                console.log('Panorama button clicked, current isPanoramaMode:', isPanoramaMode);
                 togglePanoramaMode();
             });
             
@@ -2480,17 +2416,11 @@ If you continue to experience issues, please refresh the page or contact support
             
             // Toggle between normal map and panorama mode
             function togglePanoramaMode() {
-                console.log('togglePanoramaMode called, isPanoramaMode:', isPanoramaMode);
                 if (isPanoramaMode) {
-                    // Exit panorama mode, return to normal maps
-                    console.log('Exiting panorama mode');
                     exitPanoramaMode();
                 } else {
-                    // Enter panorama mode
-                    console.log('Entering panorama mode');
                     enterPanoramaMode();
                 }
-                console.log('togglePanoramaMode completed, final isPanoramaMode:', isPanoramaMode);
             }
             
             // Enter panorama mode
@@ -2515,9 +2445,7 @@ If you continue to experience issues, please refresh the page or contact support
                 exitPanoramaBtn.setAttribute('data-tooltip', 'Exit to Normal Maps');
                 backToMapBtn.classList.add('hidden');
                 
-                // Set panorama mode state
                 isPanoramaMode = true;
-                console.log('enterPanoramaMode: set isPanoramaMode = true');
                 
                 if (!panoramaMap) {
                     initializePanoramaMap();
@@ -2531,8 +2459,6 @@ If you continue to experience issues, please refresh the page or contact support
             
             // Exit panorama mode
             function exitPanoramaMode() {
-                console.log('exitPanoramaMode called, current isPanoramaMode:', isPanoramaMode);
-                
                 // Show map elements again
                 if (map1) map1.style.display = '';
                 if (map2) map2.style.display = '';
@@ -2550,9 +2476,7 @@ If you continue to experience issues, please refresh the page or contact support
                 exitPanoramaBtn.classList.add('hidden');
                 backToMapBtn.classList.add('hidden');
                 
-                // Update panorama mode state
                 isPanoramaMode = false;
-                console.log('exitPanoramaMode: set isPanoramaMode = false');
                 
                 // Clean up any active panorama scene
                 if (panoramaScene) {
@@ -2566,8 +2490,6 @@ If you continue to experience issues, please refresh the page or contact support
             
             // Back to panorama map from 360° viewer
             function backToPanoramaMap() {
-                console.log('backToPanoramaMap called, current isPanoramaMode:', isPanoramaMode);
-                
                 // Show panorama map container
                 panoramaMapContainer.classList.remove('hidden');
                 panoramaViewer.classList.add('hidden');
@@ -2579,9 +2501,7 @@ If you continue to experience issues, please refresh the page or contact support
                 exitPanoramaBtn.setAttribute('data-tooltip', 'Exit to Normal Maps');
                 backToMapBtn.classList.add('hidden');
                 
-                // Ensure we're still in panorama mode
                 isPanoramaMode = true;
-                console.log('backToPanoramaMap: ensured isPanoramaMode = true');
                 
                 // Clean up A-Frame scene
                 if (panoramaScene) {
@@ -2628,7 +2548,7 @@ If you continue to experience issues, please refresh the page or contact support
             });
             
             // Load panorama configuration and add pins
-            fetch('/static/assets/360/panorama-config.json')
+            fetch('/api/panorama-config/')
                 .then(response => response.json())
                 .then(data => {
                     addPanoramaPins(data.pins);
