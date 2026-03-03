@@ -2629,10 +2629,7 @@ If you continue to experience issues, please refresh the page or contact support
             camera.setAttribute('position', '0 1.6 0');
             camera.setAttribute('cursor', 'rayOrigin: mouse');
             
-            // Add cursor for interactionty: 0.8');git a
-            cursor.setAttribute('raycaster', 'objects: .clickable');
-            
-            camera.appendChild(cursor);
+            camera.appendChild(document.createElement('a-cursor'));
             scene.appendChild(sky);
             scene.appendChild(camera);
             
