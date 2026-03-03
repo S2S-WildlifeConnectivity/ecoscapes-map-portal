@@ -136,7 +136,10 @@ class Command(BaseCommand):
             
             # Copy static files
             self.copy_static_files(static_dir)
-            
+
+            # Fix imageUrl paths in all panorama-config.json copies
+            self.rewrite_panorama_configs(output_dir)
+
             # Create a simple 404 page
             self.create_404_page(output_dir)
             
@@ -340,6 +343,21 @@ class Command(BaseCommand):
             self.stderr.write(f'Error exporting page {page_name}: {str(e)}')
             raise
     
+    def rewrite_panorama_configs(self, output_dir):
+        """Fix absolute /static/ imageUrl paths in all panorama-config.json copies."""
+        for config_path in output_dir.rglob('panorama-config.json'):
+            try:
+                with open(config_path, 'r') as f:
+                    config = json.load(f)
+                for pin in config.get('pins', []):
+                    if 'imageUrl' in pin:
+                        pin['imageUrl'] = pin['imageUrl'].replace('/static/', 'static/')
+                with open(config_path, 'w') as f:
+                    json.dump(config, f, indent=2)
+                self.stdout.write(self.style.SUCCESS(f'Rewrote imageUrls in {config_path}'))
+            except Exception as e:
+                self.stderr.write(f'Error rewriting {config_path}: {str(e)}')
+
     def create_404_page(self, output_dir):
         """Create a simple 404 page."""
         try:
