@@ -1481,7 +1481,7 @@ If you continue to experience issues, please refresh the page or contact support
                         <div class="info-box-header">
                             <div class="info-box-title">Theme Information</div>
                             <div class="theme-icon">
-                                <i class="icon ${theme.icon.replace('icon-', '')}"></i>
+                                <i class="icon ${getIconClass(theme.icon)}"></i>
                             </div>
                         </div>
                         <div class="text-content">
@@ -2520,7 +2520,7 @@ If you continue to experience issues, please refresh the page or contact support
                 setTimeout(() => {
                     if (panoramaMap) {
                         panoramaMap.invalidateSize();
-                        panoramaMap.setView([49.7016, -123.1557], 11);
+                        panoramaMap.setView([49.7016, -123.1557], 8.5);
                     }
                 }, 100);
             }
@@ -2531,19 +2531,19 @@ If you continue to experience issues, please refresh the page or contact support
             const mapElement = document.getElementById('panoramaMap');
             
             // Create map centered on Squamish
-            panoramaMap = L.map('panoramaMap').setView([49.7016, -123.1557], 11);
+            panoramaMap = L.map('panoramaMap').setView([49.7016, -123.1557], 8.5);
             
             // Add tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
-                maxZoom: 18
+                maxZoom: 30
             }).addTo(panoramaMap);
             
             // Add window resize listener to keep map centered on Squamish
             window.addEventListener('resize', () => {
                 setTimeout(() => {
                     panoramaMap.invalidateSize();
-                    panoramaMap.setView([49.7016, -123.1557], 11);
+                    panoramaMap.setView([49.7016, -123.1557], 8.5);
                 }, 100);
             });
             

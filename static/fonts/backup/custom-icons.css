@@ -1,17 +1,16 @@
 @font-face {
   font-family: 'custom-icons';
-  src:  url('/static/fonts/icomoon.eot?z3igty');
-  src:  url('/static/fonts/icomoon.eot?z3igty#iefix') format('embedded-opentype'),
-    url('/static/fonts/icomoon.ttf?z3igty') format('truetype'),
-    url('/static/fonts/icomoon.woff?z3igty') format('woff'),
-    url('/static/fonts/icomoon.svg?z3igty#icomoon') format('svg');
+  src:  url('/static/fonts/icomoon.eot');
+  src:  url('/static/fonts/icomoon.eot#iefix') format('embedded-opentype'),
+    url('/static/fonts/icomoon.ttf') format('truetype'),
+    url('/static/fonts/icomoon.woff') format('woff'),
+    url('/static/fonts/icomoon.svg#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
 }
 
 [class^="icon-"], [class*=" icon-"] {
-  /* use !important to prevent issues with browser extensions that change fonts */
   font-family: 'custom-icons' !important;
   speak: never;
   font-style: normal;
@@ -20,7 +19,6 @@
   text-transform: none;
   line-height: 1;
   font-size: 1em;
-  /* Better Font Rendering =========== */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -176,153 +174,156 @@
 .icon-habitat-threats:before {
   content: "\e92e";
 }
-.icon-herptiles:before {
+.icon-habitat-values:before {
   content: "\e92f";
 }
-.icon-hoary-marmot:before {
+.icon-herptiles:before {
   content: "\e930";
 }
-.icon-how-to-contribute:before {
+.icon-hoary-marmot:before {
   content: "\e931";
 }
-.icon-human-footprint:before {
+.icon-how-to-contribute:before {
   content: "\e932";
 }
-.icon-invasive-species:before {
+.icon-human-footprint:before {
   content: "\e933";
 }
-.icon-land-cover:before {
+.icon-invasive-species:before {
   content: "\e934";
 }
-.icon-large-range-corridors:before {
+.icon-land-cover:before {
   content: "\e935";
 }
-.icon-large-range-species:before {
+.icon-large-range-corridors:before {
   content: "\e936";
 }
-.icon-learning-resources:before {
+.icon-large-range-species:before {
   content: "\e937";
 }
-.icon-linear-infrastructure:before {
+.icon-learning-resources:before {
   content: "\e938";
 }
-.icon-local-knowledge:before {
+.icon-linear-infrastructure:before {
   content: "\e939";
 }
-.icon-long-toed-salamander:before {
+.icon-local-knowledge:before {
   content: "\e93a";
 }
-.icon-macro-refugia:before {
+.icon-long-toed-salamander:before {
   content: "\e93b";
 }
-.icon-mammals:before {
+.icon-macro-refugia:before {
   content: "\e93c";
 }
-.icon-mesic-vegetation:before {
+.icon-mammals:before {
   content: "\e93d";
 }
-.icon-micro-range-species:before {
+.icon-mesic-vegetation:before {
   content: "\e93e";
 }
-.icon-micro-refugia:before {
+.icon-micro-range-species:before {
   content: "\e93f";
 }
-.icon-mink:before {
+.icon-micro-refugia:before {
   content: "\e940";
 }
-.icon-mission:before {
+.icon-mink:before {
   content: "\e941";
 }
-.icon-moderate-range-corridors:before {
+.icon-mission:before {
   content: "\e942";
 }
-.icon-moderate-range-species:before {
+.icon-moderate-range-corridors:before {
   content: "\e943";
 }
-.icon-mountain-goat:before {
+.icon-moderate-range-species:before {
   content: "\e944";
 }
-.icon-northwest-salamander:before {
+.icon-mountain-goat:before {
   content: "\e945";
 }
-.icon-open-data-portal:before {
+.icon-northwest-salamander:before {
   content: "\e946";
 }
-.icon-pacific-fisher:before {
+.icon-open-data-portal:before {
   content: "\e947";
 }
-.icon-pacific-tree-frog:before {
+.icon-pacific-fisher:before {
   content: "\e948";
 }
-.icon-pinchpoints:before {
+.icon-pacific-tree-frog:before {
   content: "\e949";
 }
-.icon-planning-guide:before {
+.icon-pinchpoints:before {
   content: "\e94a";
 }
-.icon-priority-linkages:before {
+.icon-planning-guide:before {
   content: "\e94b";
 }
-.icon-question:before {
+.icon-priority-linkages:before {
   content: "\e94c";
 }
-.icon-red-legged-frog:before {
+.icon-question:before {
   content: "\e94d";
 }
-.icon-resistance-to-movement:before {
+.icon-red-legged-frog:before {
   content: "\e94e";
 }
-.icon-site-level-vegetation:before {
+.icon-resistance-to-movement:before {
   content: "\e94f";
 }
-.icon-small-range-corridors:before {
+.icon-site-level-vegetation:before {
   content: "\e950";
 }
-.icon-small-range-species:before {
+.icon-small-range-corridors:before {
   content: "\e951";
 }
-.icon-species-occurrences:before {
+.icon-small-range-species:before {
   content: "\e952";
 }
-.icon-stewardship-guide:before {
+.icon-species-occurrences:before {
   content: "\e953";
 }
-.icon-story-telling:before {
+.icon-stewardship-guide:before {
   content: "\e954";
 }
-.icon-structural-connectivity:before {
+.icon-story-telling:before {
   content: "\e955";
 }
-.icon-urbanization:before {
+.icon-structural-connectivity:before {
   content: "\e956";
 }
-.icon-vascular-plants:before {
+.icon-urbanization:before {
   content: "\e957";
 }
-.icon-western-toad:before {
+.icon-vascular-plants:before {
   content: "\e958";
 }
-.icon-wetland-riparian:before {
+.icon-western-toad:before {
   content: "\e959";
 }
-.icon-what-we-do:before {
+.icon-wetland-riparian:before {
   content: "\e95a";
 }
-.icon-who-we-are:before {
+.icon-what-we-do:before {
   content: "\e95b";
 }
-.icon-wildfire:before {
+.icon-who-we-are:before {
   content: "\e95c";
 }
-.icon-wildlife-corridors:before {
+.icon-wildfire:before {
   content: "\e95d";
 }
-.icon-wolverine:before {
+.icon-wildlife-corridors:before {
   content: "\e95e";
 }
-.icon-xeric-vegetation:before {
+.icon-wolverine:before {
   content: "\e95f";
 }
-.icon-yellow-pine-chipmunk:before {
+.icon-xeric-vegetation:before {
   content: "\e960";
+}
+.icon-yellow-pine-chipmunk:before {
+  content: "\e961";
 }

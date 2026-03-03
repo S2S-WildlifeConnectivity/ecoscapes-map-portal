@@ -72,11 +72,13 @@ def format_source(row):
 themes = []
 indicators = {}
 
-# Get unique themes in order of appearance
+# Get unique themes in order of appearance (skip blank rows)
 theme_order = {}
-for i, theme in enumerate(df['Theme'].drop_duplicates()):
+counter = 1
+for theme in df['Theme'].drop_duplicates():
     if pd.notna(theme):
-        theme_order[theme] = i + 1
+        theme_order[theme] = counter
+        counter += 1
 
 # Process themes in order of appearance
 themes = []
@@ -91,7 +93,7 @@ for theme_name, theme_group in df.groupby('Theme', sort=False):
 
     theme_obj = {
         "id": f"{theme_order[theme_name]:02d}-{theme_id}",
-        "name": f"{theme_order[theme_name]}.0 {theme_name}",
+        "name": theme_name,
         "description": theme_info,
         "icon": theme_icon,
         "subthemes": []
@@ -99,7 +101,7 @@ for theme_name, theme_group in df.groupby('Theme', sort=False):
 
     # Process subthemes in order of appearance
     subtheme_counter = 1
-    for (subtheme_name, subtheme_group) in theme_group.groupby('Subtheme', sort=False):
+    for (subtheme_name, subtheme_group) in theme_group.groupby('SubTheme', sort=False):
         if pd.isna(subtheme_name):
             continue
 
@@ -111,7 +113,7 @@ for theme_name, theme_group in df.groupby('Theme', sort=False):
 
         subtheme_obj = {
             "id": f"{theme_order[theme_name]:02d}-{subtheme_counter:02d}-{subtheme_id}",
-            "name": f"{theme_order[theme_name]}.{subtheme_counter} {subtheme_name}",
+            "name": subtheme_name,
             "description": subtheme_info,
             "icon": subtheme_icon,
             "indicators": []
@@ -181,7 +183,7 @@ for theme_name, theme_group in df.groupby('Theme', sort=False):
             
             # Add indicator details to indicators dictionary
             indicators[indicator_id] = {
-                "title": f"{theme_order[theme_name]}.{subtheme_counter}.{indicator_counter} {indicator_name}",
+                "title": indicator_name,
                 "description": clean_description,
                 "source": format_source(row),
                 "unit_of_measure": clean_unit,
@@ -191,6 +193,20 @@ for theme_name, theme_group in df.groupby('Theme', sort=False):
             }
 
             indicator_counter += 1
+
+        # If no indicators were found, the subtheme IS the indicator
+        if not subtheme_obj["indicators"]:
+            indicator_id = f"{theme_order[theme_name]:02d}-{subtheme_counter:02d}-01-{subtheme_id}"
+            subtheme_obj["indicators"].append(indicator_id)
+            indicators[indicator_id] = {
+                "title": subtheme_name,
+                "description": subtheme_info,
+                "source": "",
+                "unit_of_measure": "",
+                "icon": subtheme_icon or "fa-leaf",
+                "map1_url": "",
+                "map2_url": ""
+            }
 
         subtheme_counter += 1
         theme_obj["subthemes"].append(subtheme_obj)
