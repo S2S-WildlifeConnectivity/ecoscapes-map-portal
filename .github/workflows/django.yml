@@ -58,6 +58,21 @@ jobs:
         cp -r staticfiles/* docs/static/ 2>/dev/null || true
         cp -r static/* docs/static/ 2>/dev/null || true
     
+    - name: Fix panorama image paths for static deployment
+      run: |
+        python -c "
+        import json, glob
+        for path in glob.glob('docs/**/panorama-config.json', recursive=True):
+            with open(path) as f:
+                config = json.load(f)
+            for pin in config.get('pins', []):
+                if 'imageUrl' in pin:
+                    pin['imageUrl'] = pin['imageUrl'].replace('/static/', 'static/')
+            with open(path, 'w') as f:
+                json.dump(config, f, indent=2)
+            print(f'Fixed {path}')
+        "
+
     - name: Create .nojekyll file
       run: touch docs/.nojekyll
     
