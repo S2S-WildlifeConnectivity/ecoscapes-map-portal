@@ -147,7 +147,8 @@ body, html {
 .fullscreen-btn,
 .toggle-info-btn,
 .git-hub-link-btn,
-.theme-collections-btn {
+.theme-collections-btn,
+.panorama-360-btn {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -180,7 +181,9 @@ body, html {
 .git-hub-link-btn:hover,
 .git-hub-link-btn:focus,
 .theme-collections-btn:hover,
-.theme-collections-btn:focus {
+.theme-collections-btn:focus,
+.panorama-360-btn:hover,
+.panorama-360-btn:focus {
   border-color: var(--primary);
   background-color: var(--bg-hover);
   color: var(--primary);
@@ -194,7 +197,8 @@ body, html {
 .fullscreen-btn i,
 .toggle-info-btn i,
 .git-hub-link-btn i,
-.theme-collections-btn i {
+.theme-collections-btn i,
+.panorama-360-btn i {
   font-size: 1.1em;
 }
 
@@ -1501,3 +1505,305 @@ body, html {
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         z-index: 1001;
     }
+
+/* =================================
+   360° Panorama View Styles
+   ================================= */
+.panorama-view {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-main);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.panorama-view.hidden {
+  display: none;
+}
+
+/* Back Button */
+.back-to-map-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+  z-index: 1001;
+}
+
+.back-to-map-btn:hover,
+.back-to-map-btn:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+.back-to-map-btn i {
+  font-size: 16px;
+}
+
+/* Exit Panorama X Button */
+.exit-panorama-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+  z-index: 1001;
+  min-width: 44px;
+  height: 44px;
+  gap: 8px;
+}
+
+.exit-panorama-btn:hover,
+.exit-panorama-btn:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+.exit-panorama-btn i {
+  font-size: 16px;
+}
+
+.exit-panorama-btn span {
+  display: none;
+}
+
+/* Show text when in 360° viewer */
+.exit-panorama-btn.show-text span {
+  display: inline;
+}
+
+.exit-panorama-btn.show-text {
+  padding: 12px 16px;
+  min-width: auto;
+  width: auto;
+}
+
+/* Panorama Info */
+.panorama-info {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 24px;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  z-index: 1001;
+}
+
+.panorama-title {
+  margin: 0 0 8px 0;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.panorama-description {
+  margin: 0;
+  color: var(--text-light);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Panorama Map Container */
+.panorama-map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.panorama-map {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius);
+}
+
+/* Panorama Viewer */
+.panorama-viewer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panorama-viewer.hidden {
+  display: none;
+}
+
+.pano-viewer {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.pano-viewer:active {
+  cursor: grabbing;
+}
+
+/* Custom leaflet popup styles for panorama pins */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.leaflet-popup-content {
+  margin: 12px 16px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.leaflet-popup-content h3 {
+  margin: 0 0 8px 0;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.leaflet-popup-content p {
+  margin: 0 0 12px 0;
+  color: var(--text-light);
+  font-size: 13px;
+}
+
+.leaflet-popup-content .view-pano-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.leaflet-popup-content .view-pano-btn:hover,
+.leaflet-popup-content .view-pano-btn:focus {
+  background: var(--primary-dark);
+}
+
+/* Custom panorama pin styles */
+.panorama-pin {
+  background: var(--primary);
+  border: 3px solid white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.panorama-pin:hover {
+  transform: scale(1.2);
+  background: var(--primary-dark);
+}
+
+/* Loading state for panorama viewer */
+.panorama-viewer.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: white;
+}
+
+.panorama-viewer.loading .spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Mobile responsive styles for panorama view */
+@media (max-width: 768px) {
+  .back-to-map-btn {
+    top: 10px;
+    right: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .exit-panorama-btn {
+    top: 10px;
+    right: 10px;
+    padding: 10px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .panorama-info {
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 16px;
+    max-width: 90%;
+  }
+  
+  .panorama-title {
+    font-size: 16px;
+  }
+  
+  .panorama-description {
+    font-size: 13px;
+  }
+  
+  .panorama-pin {
+    width: 16px;
+    height: 16px;
+  }
+}

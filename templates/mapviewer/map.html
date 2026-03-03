@@ -8,6 +8,7 @@
     <link rel="icon" type="image/x-icon" href="static/favicon.ico">
     <title>Map Viewer - {{ page_name }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="{% static 'fonts/custom-icons.css' %}">
     <link rel="stylesheet" href="{% static 'css/mapviewer.css' %}">
 </head>
@@ -75,6 +76,9 @@
                 <!-- Populated by JavaScript -->
             </div>
           </div>
+          <button id="panorama360" class="panorama-360-btn" data-tooltip="360° Panorama View">
+            <i class="fas fa-panorama" id="panoIcon"></i>
+          </button>
           <button id="darkModeToggle" class="dark-mode-toggle" data-tooltip="Toggle Dark Mode">
             <i class="fas fa-moon"></i>
           </button>
@@ -151,11 +155,45 @@
             </div>
             <iframe id="map1" class="map-iframe" src=""></iframe>
             <iframe id="map2" class="map-iframe" src=""></iframe>
+            
+            <!-- 360° Panorama View Container -->
+            <div id="panoramaView" class="panorama-view hidden">
+              <!-- Back Button (only shown in 360° viewer) -->
+              <button id="backToMap" class="back-to-map-btn hidden" data-tooltip="Back to Panorama Map">
+                <i class="fas fa-arrow-left"></i>
+                Back to Pano Map
+              </button>
+              
+              <!-- X Button to exit panorama mode (only shown on panorama map) -->
+              <button id="exitPanorama" class="exit-panorama-btn hidden" data-tooltip="Exit to Normal Maps">
+                <i class="fas fa-times"></i>
+                <span id="exitButtonText">Exit to Normal Maps</span>
+              </button>
+              
+              <!-- Panorama Title and Description -->
+              <div class="panorama-info">
+                <h2 id="panoramaTitle" class="panorama-title">Select a Location</h2>
+                <p id="panoramaDescription" class="panorama-description">Click on a pin to view the 360° panorama</p>
+              </div>
+              
+              <!-- Panorama Map Container -->
+              <div id="panoramaMapContainer" class="panorama-map-container">
+                <div id="panoramaMap" class="panorama-map"></div>
+              </div>
+              
+              <!-- 360° Viewer Container -->
+              <div id="panoramaViewer" class="panorama-viewer hidden">
+                <div id="panoViewer" class="pano-viewer"></div>
+              </div>
+            </div>
           </div>
-        </div>
       </div>
 
-      <script>
+    <!-- JavaScript Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+    <script>
         // Global tooltip reference for theme switching
         let currentTooltip = null;
         
@@ -2391,6 +2429,310 @@ If you continue to experience issues, please refresh the page or contact support
             };
             fetchWordPressPosts(currentIndicator);
         });
+
+        // =================================
+        // 360° Panorama Functionality
+        // =================================
+        
+        // Global variables for panorama functionality
+        let panoramaMap = null;
+        let panoramaMarkers = [];
+        let currentPanorama = null;
+        let panoramaScene = null;
+        let isPanoramaMode = false;
+        
+        // Initialize panorama functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const panoramaBtn = document.getElementById('panorama360');
+            const backToMapBtn = document.getElementById('backToMap');
+            const exitPanoramaBtn = document.getElementById('exitPanorama');
+            const exitButtonText = document.getElementById('exitButtonText');
+            const panoramaView = document.getElementById('panoramaView');
+            const panoramaMapContainer = document.getElementById('panoramaMapContainer');
+            const panoramaViewer = document.getElementById('panoramaViewer');
+            const map1 = document.getElementById('map1');
+            const map2 = document.getElementById('map2');
+            const mapPlaceholder = document.getElementById('mapPlaceholder');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const panoIcon = document.getElementById('panoIcon');
+            
+            // 360° button click handler
+            panoramaBtn.addEventListener('click', function() {
+                console.log('Panorama button clicked, current isPanoramaMode:', isPanoramaMode);
+                togglePanoramaMode();
+            });
+            
+            // Back to panorama map button click handler
+            backToMapBtn.addEventListener('click', function() {
+                backToPanoramaMap();
+            });
+            
+            // X button to handle context-based actions
+            exitPanoramaBtn.addEventListener('click', function() {
+                if (panoramaViewer.classList.contains('hidden')) {
+                    // On panorama map: exit panorama mode completely
+                    exitPanoramaMode();
+                } else {
+                    // In 360° viewer: back to panorama map
+                    backToPanoramaMap();
+                }
+            });
+            
+            // Toggle between normal map and panorama mode
+            function togglePanoramaMode() {
+                console.log('togglePanoramaMode called, isPanoramaMode:', isPanoramaMode);
+                if (isPanoramaMode) {
+                    // Exit panorama mode, return to normal maps
+                    console.log('Exiting panorama mode');
+                    exitPanoramaMode();
+                } else {
+                    // Enter panorama mode
+                    console.log('Entering panorama mode');
+                    enterPanoramaMode();
+                }
+                console.log('togglePanoramaMode completed, final isPanoramaMode:', isPanoramaMode);
+            }
+            
+            // Enter panorama mode
+            function enterPanoramaMode() {
+                // Hide map elements
+                if (map1) map1.style.display = 'none';
+                if (map2) map2.style.display = 'none';
+                if (mapPlaceholder) mapPlaceholder.style.display = 'none';
+                if (loadingSpinner) loadingSpinner.style.display = 'none';
+                
+                // Show panorama view
+                panoramaView.classList.remove('hidden');
+                
+                // Update button tooltip and icon
+                panoramaBtn.setAttribute('data-tooltip', 'Exit 360° Panorama Mode');
+                panoIcon.className = 'fa-solid fa-map';
+                
+                // Show X button with "Exit" text, hide back button (on panorama map)
+                exitPanoramaBtn.classList.remove('hidden');
+                exitPanoramaBtn.classList.remove('show-text');
+                exitButtonText.textContent = 'Exit to Normal Maps';
+                exitPanoramaBtn.setAttribute('data-tooltip', 'Exit to Normal Maps');
+                backToMapBtn.classList.add('hidden');
+                
+                // Set panorama mode state
+                isPanoramaMode = true;
+                console.log('enterPanoramaMode: set isPanoramaMode = true');
+                
+                if (!panoramaMap) {
+                    initializePanoramaMap();
+                } else {
+                    // Refresh the map to ensure it renders properly
+                    setTimeout(() => {
+                        panoramaMap.invalidateSize();
+                    }, 100);
+                }
+            }
+            
+            // Exit panorama mode
+            function exitPanoramaMode() {
+                console.log('exitPanoramaMode called, current isPanoramaMode:', isPanoramaMode);
+                
+                // Show map elements again
+                if (map1) map1.style.display = '';
+                if (map2) map2.style.display = '';
+                if (mapPlaceholder) mapPlaceholder.style.display = '';
+                if (loadingSpinner) loadingSpinner.style.display = '';
+                
+                // Hide panorama view
+                panoramaView.classList.add('hidden');
+                
+                // Update button tooltip and icon
+                panoramaBtn.setAttribute('data-tooltip', '360° Panorama View');
+                panoIcon.className = 'fas fa-panorama';
+                
+                // Hide both X and back buttons
+                exitPanoramaBtn.classList.add('hidden');
+                backToMapBtn.classList.add('hidden');
+                
+                // Update panorama mode state
+                isPanoramaMode = false;
+                console.log('exitPanoramaMode: set isPanoramaMode = false');
+                
+                // Clean up any active panorama scene
+                if (panoramaScene) {
+                    const scene = document.querySelector('#panoViewer a-scene');
+                    if (scene) {
+                        scene.parentNode.removeChild(scene);
+                    }
+                    panoramaScene = null;
+                }
+            }
+            
+            // Back to panorama map from 360° viewer
+            function backToPanoramaMap() {
+                console.log('backToPanoramaMap called, current isPanoramaMode:', isPanoramaMode);
+                
+                // Show panorama map container
+                panoramaMapContainer.classList.remove('hidden');
+                panoramaViewer.classList.add('hidden');
+                
+                // Show X button with "Exit to Normal Maps" text, hide back button
+                exitPanoramaBtn.classList.remove('hidden');
+                exitPanoramaBtn.classList.remove('show-text');
+                exitButtonText.textContent = 'Exit to Normal Maps';
+                exitPanoramaBtn.setAttribute('data-tooltip', 'Exit to Normal Maps');
+                backToMapBtn.classList.add('hidden');
+                
+                // Ensure we're still in panorama mode
+                isPanoramaMode = true;
+                console.log('backToPanoramaMap: ensured isPanoramaMode = true');
+                
+                // Clean up A-Frame scene
+                if (panoramaScene) {
+                    const scene = document.querySelector('#panoViewer a-scene');
+                    if (scene) {
+                        scene.parentNode.removeChild(scene);
+                    }
+                    panoramaScene = null;
+                }
+                
+                // Reset info text
+                document.getElementById('panoramaTitle').textContent = 'Select a Location';
+                document.getElementById('panoramaDescription').textContent = 'Click on a pin to view the 360° panorama';
+
+                // Re-center and resize the map after the container becomes visible
+                setTimeout(() => {
+                    if (panoramaMap) {
+                        panoramaMap.invalidateSize();
+                        panoramaMap.setView([49.7016, -123.1557], 11);
+                    }
+                }, 100);
+            }
+        });
+        
+        // Initialize the panorama map with pins from config
+        function initializePanoramaMap() {
+            const mapElement = document.getElementById('panoramaMap');
+            
+            // Create map centered on Squamish
+            panoramaMap = L.map('panoramaMap').setView([49.7016, -123.1557], 11);
+            
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(panoramaMap);
+            
+            // Add window resize listener to keep map centered on Squamish
+            window.addEventListener('resize', () => {
+                setTimeout(() => {
+                    panoramaMap.invalidateSize();
+                    panoramaMap.setView([49.7016, -123.1557], 11);
+                }, 100);
+            });
+            
+            // Load panorama configuration and add pins
+            fetch('/static/assets/360/panorama-config.json')
+                .then(response => response.json())
+                .then(data => {
+                    addPanoramaPins(data.pins);
+                })
+                .catch(error => {
+                    console.error('Error loading panorama config:', error);
+                    toastManager.error('Failed to load panorama locations');
+                });
+        }
+        
+        // Add panorama pins to the map
+        function addPanoramaPins(pins) {
+            pins.forEach(pin => {
+                const marker = L.marker([pin.lat, pin.lng], {
+                    className: 'panorama-pin'
+                }).addTo(panoramaMap);
+                
+                // Create popup content
+                const popupContent = `
+                    <div style="min-width: 200px;">
+                        <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 16px; font-weight: 600;">${pin.title}</h3>
+                        <p style="margin: 0 0 12px 0; color: var(--text-light); font-size: 13px; line-height: 1.4;">${pin.description}</p>
+                        <button class="view-pano-btn" onclick="loadPanorama('${pin.id}', '${pin.title}', '${pin.description}', '${pin.imageUrl}')">
+                            <i class="fas fa-panorama"></i> View 360° Panorama
+                        </button>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                panoramaMarkers.push(marker);
+            });
+        }
+        
+        // Load 360° panorama in viewer
+        function loadPanorama(id, title, description, imageUrl) {
+            currentPanorama = { id, title, description, imageUrl };
+            
+            // Update info display
+            document.getElementById('panoramaTitle').textContent = title;
+            document.getElementById('panoramaDescription').textContent = description;
+            
+            // Show loading state
+            const panoramaViewer = document.getElementById('panoramaViewer');
+            const panoramaMapContainer = document.getElementById('panoramaMapContainer');
+            
+            // Hide map container and show viewer
+            panoramaMapContainer.classList.add('hidden');
+            panoramaViewer.classList.remove('hidden');
+            panoramaViewer.classList.add('loading');
+            
+            // Show back button, hide X button (when viewing 360° panorama)
+            const backToMapBtn = document.getElementById('backToMap');
+            const exitPanoramaBtn = document.getElementById('exitPanorama');
+            backToMapBtn.classList.remove('hidden');
+            exitPanoramaBtn.classList.add('hidden');
+            
+            // Clean up existing scene
+            const existingScene = document.querySelector('#panoViewer a-scene');
+            if (existingScene) {
+                existingScene.parentNode.removeChild(existingScene);
+            }
+            
+            // Create A-Frame scene for 360° panorama
+            const scene = document.createElement('a-scene');
+            scene.setAttribute('embedded', '');
+            scene.setAttribute('vr-mode-ui', 'enabled: false');
+            scene.style.background = '#000';
+            
+            // Add 360° image
+            const sky = document.createElement('a-sky');
+            sky.setAttribute('src', imageUrl);
+            sky.setAttribute('rotation', '0 -90 0');
+            
+            // Add camera with look controls
+            const camera = document.createElement('a-camera');
+            camera.setAttribute('look-controls', 'reverseMouseDrag: true; pointerLockEnabled: false');
+            camera.setAttribute('wasd-controls', 'enabled: false');
+            camera.setAttribute('position', '0 1.6 0');
+            camera.setAttribute('cursor', 'rayOrigin: mouse');
+            
+            // Add cursor for interaction
+            const cursor = document.createElement('a-cursor');
+            cursor.setAttribute('animation__click', 'property: scale; start: 0.1; to: 1; dur: 150; begin: click; easing: easeOutCubic');
+            cursor.setAttribute('geometry', 'primitive: ring; radiusInner: 0.005; radiusOuter: 0.01');
+            cursor.setAttribute('material', 'color: white; shader: flat; opacity: 0.8');
+            cursor.setAttribute('raycaster', 'objects: .clickable');
+            
+            camera.appendChild(cursor);
+            scene.appendChild(sky);
+            scene.appendChild(camera);
+            
+            // Add scene to viewer
+            document.getElementById('panoViewer').appendChild(scene);
+            
+            // Force A-Frame to initialize
+            setTimeout(() => {
+                // Remove loading state when scene is ready
+                panoramaViewer.classList.remove('loading');
+                panoramaScene = scene;
+            }, 500);
+        }
+        
+        // Make loadPanorama available globally
+        window.loadPanorama = loadPanorama;
     </script>
 
     <!-- Modal for Markdown Content -->

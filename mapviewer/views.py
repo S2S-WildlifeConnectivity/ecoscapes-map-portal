@@ -12,23 +12,6 @@ def load_map_config():
     except FileNotFoundError:
         return {}
 
-def get_flattened_indicators(config):
-    """Convert the hierarchical structure to a flat dictionary for backward compatibility."""
-    if 'indicators' in config:
-        return config['indicators']
-    return config  # For old config format
-
-def get_flat_indicators_list(config):
-    """Get a flat list of all indicators for the dropdown."""
-    if 'indicators' in config:
-        return config['indicators']
-    return config  # For old config format
-
-def get_indicator_details(config, indicator_id):
-    """Get details for a specific indicator."""
-    if 'indicators' in config and indicator_id in config['indicators']:
-        return config['indicators'][indicator_id]
-    return config.get(indicator_id)  # For old config format
 
 def map_view(request, page_name='default'):
     config = load_map_config()

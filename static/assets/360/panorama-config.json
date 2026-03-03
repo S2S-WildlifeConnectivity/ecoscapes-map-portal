@@ -1,0 +1,28 @@
+{
+  "pins": [
+    {
+      "id": "garibaldi-highlands-2",
+      "title": "Garibaldi Highlands",
+      "description": "A view from the forested slopes above Garibaldi Highlands.",
+      "lat": 49.7456516667,
+      "lng": -123.0894002778,
+      "imageUrl": "/static/assets/360/garibaldi_highlands_2_pano.jpg"
+    },
+    {
+      "id": "river-valley-lookout",
+      "title": "River Valley Lookout", 
+      "description": "Overlook of the river valley and surrounding forest",
+      "lat": 49.6916,
+      "lng": -123.1657,
+      "imageUrl": "/static/assets/360/test-pano.jpg"
+    },
+    {
+      "id": "forest-trail-vista",
+      "title": "Forest Trail Vista",
+      "description": "360° view from the main forest trail",
+      "lat": 49.7016,
+      "lng": -123.1557,
+      "imageUrl": "/static/assets/360/test-pano.jpg"
+    }
+  ]
+}
