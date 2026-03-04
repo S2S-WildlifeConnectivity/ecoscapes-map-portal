@@ -208,6 +208,34 @@ body, html {
   margin-left: auto;
 }
 
+/* Mobile burger button — hidden on desktop */
+.mobile-menu-btn {
+  display: none;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  color: var(--text);
+  transition: var(--transition);
+}
+
+.mobile-menu-btn:hover,
+.mobile-menu-btn:focus {
+  border-color: var(--primary);
+  background-color: var(--bg-hover);
+  color: var(--primary);
+}
+
+/* On desktop the panel is just the normal flex row of buttons */
+.mobile-menu-panel {
+  display: flex;
+  align-items: center;
+}
+
 .view-mode-btn {
   /* Inherited from Right Navigation Buttons base styles */
 }
@@ -694,71 +722,103 @@ body, html {
    Responsive Styles
    ================================= */
 @media (max-width: 768px) {
-  .two-column {
+  /* Map takes full width; info panel overlays from the left */
+  .two-column,
+  .two-column.collapsed {
     grid-template-columns: 1fr;
-    height: auto;
+    height: calc(100vh - 110px);
+    position: relative;
+    overflow: hidden;
   }
-  
+
   .info-column {
-    max-height: 50vh;
-  }
-  
-  .two-column.collapsed .info-column {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    background: var(--bg-main);
+    overflow-y: auto;
     transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    max-height: none;
   }
-  
-  .map-column {
-    height: 60vh;
-  }
-  
-  /* Hide info panel by default on mobile */
-  .two-column {
-    grid-template-columns: 0 1fr;
-    gap: 0;
-  }
-  
+
+  /* Info shown when NOT collapsed (matches JS & desktop semantics) */
   .two-column:not(.collapsed) .info-column {
-    transform: translateX(-100%);
-    padding-right: 0;
-  }
-  
-  .two-column.collapsed .info-column {
     transform: translateX(0);
   }
-  
-  /* Shrink toolbar buttons to fit on mobile */
+
+  /* Info hidden when collapsed (matches JS & desktop semantics) */
+  .two-column.collapsed .info-column {
+    transform: translateX(-100%);
+  }
+
+  /* Burger button — show on mobile */
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Toolbar buttons right: only holds burger on mobile */
   .toolbar-buttons-right {
-    gap: 5px;
+    position: relative;
+    flex-wrap: nowrap;
+  }
+
+  /* Panel becomes an absolute dropdown */
+  .mobile-menu-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px;
+    box-shadow: var(--shadow);
+    z-index: 1001;
+    flex-direction: row;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    gap: 6px;
+    min-width: 180px;
   }
-  
-  .reset-filters-btn,
-  .help-modal-btn,
-  .dark-mode-toggle,
-  .view-mode-btn,
-  .fullscreen-btn,
-  .toggle-info-btn,
-  .git-hub-link-btn,
-  .theme-collections-btn,
-  .panorama-360-btn {
-    padding: 8px 10px;
-    margin-left: 5px;
-    font-size: 0.85em;
+
+  .mobile-menu-panel.open {
+    display: flex;
   }
-  
+
+  /* Toggle info button stays visible outside the burger */
+  .toolbar-buttons-right .toggle-info-btn {
+    margin-left: 0;
+  }
+
+  /* Reset button margins/sizes inside the panel */
+  .mobile-menu-panel .reset-filters-btn,
+  .mobile-menu-panel .help-modal-btn,
+  .mobile-menu-panel .dark-mode-toggle,
+  .mobile-menu-panel .view-mode-btn,
+  .mobile-menu-panel .fullscreen-btn,
+  .mobile-menu-panel .git-hub-link-btn,
+  .mobile-menu-panel .theme-collections-btn,
+  .mobile-menu-panel .panorama-360-btn {
+    margin-left: 0;
+    padding: 10px 12px;
+    font-size: 0.95em;
+  }
+
   .logo-container {
     margin-left: 20px;
     margin-right: 10px;
     height: 50px;
     max-width: 90px;
   }
-  
+
   .toolbar-top {
     padding: 10px 15px;
     gap: 10px;
   }
-  
+
   /* Compact dropdowns on mobile */
   .dropdown {
     min-width: 0;
@@ -776,21 +836,22 @@ body, html {
     font-size: 13px;
   }
 
-  /* Theme collections dropdown mobile fixes */
-  .theme-collections-wrapper {
+  /* Theme collections sub-dropdown inside burger panel */
+  .mobile-menu-panel .theme-collections-wrapper {
     position: relative;
   }
 
-  .theme-collections-wrapper #themeCollectionsMenu {
+  .mobile-menu-panel #themeCollectionsMenu {
     right: 0;
     left: auto;
+    top: calc(100% + 4px);
     min-width: 180px;
     font-size: 0.9em;
     max-width: 90vw;
     box-sizing: border-box;
   }
 
-  .theme-collections-wrapper #themeCollectionsMenu a {
+  .mobile-menu-panel #themeCollectionsMenu a {
     padding: 8px 12px;
     font-size: 0.9em;
   }
@@ -837,11 +898,6 @@ body, html {
       /* Inherited from Right Navigation Buttons icon styles */
     }
 
-.two-column.collapsed {
-  grid-template-columns: 0 1fr;
-  gap: 0;
-}
-
 .info-column {
   width: 100%;
   max-width: 100%;
@@ -856,27 +912,22 @@ body, html {
   gap: 20px;
 }
 
-.two-column.collapsed .info-column {
-  transform: translateX(-100%);
-  padding-right: 0;
+/* Re-apply mobile overlay positioning after the global .info-column rule */
+@media (max-width: 768px) {
+  .info-column {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    background: var(--bg-main);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    max-height: none;
+  }
 }
-
-    /* When collapsed, slide the info column out of view */
-    .two-column.collapsed {
-      grid-template-columns: 0 1fr; /* Use 1fr to take remaining space */
-      gap: 0px;
-    }
-
-    .two-column.collapsed .info-column {
-      transform: translateX(-100%);
-      padding-right: 0;
-    }
-
-    /* When info column is collapsed, let map take full width */
-    .two-column.collapsed .map-container {
-      width: 100%;
-      grid-column: 1 / -1; /* Make map span full width */
-    }
 
     /* Three-column-section: stack info boxes vertically in left column */
     .three-column-section {

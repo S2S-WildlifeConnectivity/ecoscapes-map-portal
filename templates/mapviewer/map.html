@@ -53,42 +53,47 @@
           </div>
         </div>
         <div class="toolbar-buttons-right">
-          <button id="resetFilters" class="reset-filters-btn" data-tooltip="Reset All Filters">
-            <i class="fa-solid fa-filter-circle-xmark"></i>
-          </button>
-          <button id="viewModeToggle" class="view-mode-btn" data-tooltip="Switch to Analyze Mode">
-            <i class="fa-solid fa-magnifying-glass-chart"></i>
-          </button>
           <button id="toggleInfoBox" class="toggle-info-btn" data-tooltip="Hide Information Pane">
             <i class="fas fa-eye-slash"></i>
           </button>
-          <button id="fullscreen" class="fullscreen-btn" data-tooltip="Open Full Screen in new tab">
-            <i class="fas fa-expand"></i>
+          <button id="mobileMenuToggle" class="mobile-menu-btn" aria-label="Menu" aria-expanded="false">
+            <i class="fas fa-bars"></i>
           </button>
-          <button id="helpModal" class="help-modal-btn" data-tooltip="Help & Documentation">
-            <i class="fas fa-question-circle"></i>
-          </button>
-          <div class="theme-collections-wrapper">
-            <button id="themeCollections" class="theme-collections-btn" data-tooltip="Theme Collections">
-              <i class="fas fa-star"></i>
+          <div class="mobile-menu-panel" id="mobileMenuPanel">
+            <button id="resetFilters" class="reset-filters-btn" data-tooltip="Reset All Filters">
+              <i class="fa-solid fa-filter-circle-xmark"></i>
             </button>
-            <div class="dropdown-menu" id="themeCollectionsMenu" role="menu">
-                <!-- Populated by JavaScript -->
+            <button id="viewModeToggle" class="view-mode-btn" data-tooltip="Switch to Analyze Mode">
+              <i class="fa-solid fa-magnifying-glass-chart"></i>
+            </button>
+            <button id="fullscreen" class="fullscreen-btn" data-tooltip="Open Full Screen in new tab">
+              <i class="fas fa-expand"></i>
+            </button>
+            <button id="helpModal" class="help-modal-btn" data-tooltip="Help & Documentation">
+              <i class="fas fa-question-circle"></i>
+            </button>
+            <div class="theme-collections-wrapper">
+              <button id="themeCollections" class="theme-collections-btn" data-tooltip="Theme Collections">
+                <i class="fas fa-star"></i>
+              </button>
+              <div class="dropdown-menu" id="themeCollectionsMenu" role="menu">
+                  <!-- Populated by JavaScript -->
+              </div>
             </div>
+            <button id="panorama360" class="panorama-360-btn" data-tooltip="360° Panorama View">
+              <i class="fas fa-panorama" id="panoIcon"></i>
+            </button>
+            <button id="darkModeToggle" class="dark-mode-toggle" data-tooltip="Toggle Dark Mode">
+              <i class="fas fa-moon"></i>
+            </button>
+            <button id="gitHublink" class="git-hub-link-btn" data-tooltip="Open Data Portal - GitHub">
+              <i class="fa-brands fa-github"></i>
+            </button>
           </div>
-          <button id="panorama360" class="panorama-360-btn" data-tooltip="360° Panorama View">
-            <i class="fas fa-panorama" id="panoIcon"></i>
-          </button>
-          <button id="darkModeToggle" class="dark-mode-toggle" data-tooltip="Toggle Dark Mode">
-            <i class="fas fa-moon"></i>
-          </button>
-          <button id="gitHublink" class="git-hub-link-btn" data-tooltip="Open Data Portal - GitHub">
-            <i class="fa-brands fa-github"></i>
-          </button>
-          <div id="logoContainer" class="logo-container">
-            <img id="logoImageLight" class="logo-light" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Light.png" alt="EcoScapes Logo" style="width: 100%; height: 100%; object-fit: contain; display: block;">
-            <img id="logoImageDark" class="logo-dark" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Dark.png" alt="EcoScapes Logo" style="width: 100%; height: 100%; object-fit: contain; display: none;">
-          </div>
+        </div>
+        <div id="logoContainer" class="logo-container">
+          <img id="logoImageLight" class="logo-light" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Light.png" alt="EcoScapes Logo" style="width: 100%; height: 100%; object-fit: contain; display: block;">
+          <img id="logoImageDark" class="logo-dark" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Dark.png" alt="EcoScapes Logo" style="width: 100%; height: 100%; object-fit: contain; display: none;">
         </div>
       </div>
       <div class="two-column">
@@ -500,6 +505,13 @@
             const mapContainer = document.querySelector('.map-container');
             const toggleIcon = toggleInfoBox.querySelector('i');
 
+            // On mobile, start on the map view (info panel hidden)
+            if (window.innerWidth <= 768) {
+                twoColumnLayout.classList.add('collapsed');
+                toggleIcon.className = 'fas fa-circle-info';
+                toggleInfoBox.setAttribute('data-tooltip', 'Show Info Panel');
+            }
+
             // Toggle the info box
             toggleInfoBox.addEventListener('click', () => {
                 // Check if we're on mobile
@@ -512,13 +524,15 @@
                 const isCollapsed = twoColumnLayout.classList.contains('collapsed');
                 
                 if (isMobile) {
-                    // On mobile: collapsed = hidden (default), not collapsed = visible
+                    // On mobile: swap between map view and info panel view
                     if (isCollapsed) {
-                        toggleIcon.className = 'fas fa-eye';
-                        toggleInfoBox.setAttribute('data-tooltip', 'Show Information Pane');
+                        // Now showing map — offer to switch to info
+                        toggleIcon.className = 'fas fa-circle-info';
+                        toggleInfoBox.setAttribute('data-tooltip', 'Show Info Panel');
                     } else {
-                        toggleIcon.className = 'fas fa-eye-slash';
-                        toggleInfoBox.setAttribute('data-tooltip', 'Hide Information Pane');
+                        // Now showing info — offer to switch back to map
+                        toggleIcon.className = 'fas fa-map';
+                        toggleInfoBox.setAttribute('data-tooltip', 'Back to Map');
                     }
                 } else {
                     // On desktop: collapsed = hidden, not collapsed = visible
@@ -534,7 +548,7 @@
                 }
                 
                 // Update tooltip text immediately if visible
-                if (currentTooltip && currentTooltip.textContent.includes('Information Pane')) {
+                if (currentTooltip) {
                     currentTooltip.textContent = toggleInfoBox.getAttribute('data-tooltip');
                 }
                 
@@ -578,6 +592,26 @@
                 githubBtn.addEventListener('click', () => {
                     // Open the open data URL in a new tab to break out of iframe
                     window.open("https://github.com/S2S-WildlifeConnectivity/EcoScapes-Open-Data-Portal.git", '_blank');
+                });
+            }
+
+            // Mobile burger menu
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+            if (mobileMenuToggle && mobileMenuPanel) {
+                mobileMenuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = mobileMenuPanel.classList.toggle('open');
+                    mobileMenuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                    mobileMenuToggle.querySelector('i').className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!mobileMenuPanel.contains(e.target) && e.target !== mobileMenuToggle) {
+                        mobileMenuPanel.classList.remove('open');
+                        mobileMenuToggle.setAttribute('aria-expanded', 'false');
+                        mobileMenuToggle.querySelector('i').className = 'fas fa-bars';
+                    }
                 });
             }
         });
@@ -2852,7 +2886,7 @@ If you continue to experience issues, please refresh the page or contact support
                         keyboard: false,
                         attributionControl: false
                     }).setView([pin.lat, pin.lng], 10);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);
+                    L.tileLayer('http://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}.png').addTo(miniMap);
                     miniMapMarker = L.marker([pin.lat, pin.lng], { icon: dirIcon }).addTo(miniMap);
                 } else {
                     miniMap.setView([pin.lat, pin.lng], 10);
