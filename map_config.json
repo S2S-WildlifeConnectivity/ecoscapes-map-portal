@@ -238,8 +238,8 @@
       "source": "<a target=\"_blank\" href=\"https://terradapt.org/\">TerrAdapt-Cascadia</a>",
       "unit_of_measure": "ecosystem resilience index (0-100)",
       "icon": "icon-ecosystem-integrity",
-      "map1_url": "",
-      "map2_url": ""
+      "map1_url": "https://felt.com/embed/map/Habitat-Suitability-40yr-Trends-oCBG0ngLROmqMCCsJtH0WA?loc=50.117%2C-123.056%2C7.73z&legend=1&cooperativeGestures=0&link=1&geolocation=0&zoomControls=1&scaleBar=1",
+      "map2_url": "https://cascadia.staging.dashboard.terradapt.org/?zoom=9.123127764960543&lng=-123.26048725554921&lat=49.712561509002825&layerTheme=%22forest_ecosystems%22&layerScope=%22monitor%22&layerVisualisation=%22pixel%22&minTimestamp=%221985-07-01T00%3A00%3A00%22&maxTimestamp=%222022-07-01T00%3A00%3A00%22&opacity=0.75&selectedLayer=%22forest_ecosystem_habitat%22&layerView=%22trend%22&layerStart=%221985-07-01T00%3A00%3A00%22&layerEnd=%222022-07-01T00%3A00%3A00%22&currentTimestamp=%222022-07-01T00%3A00%3A00%22&pitch=56.49999999999978"
     },
     "01-01-02-habitat-protection": {
       "title": "Habitat Protection",

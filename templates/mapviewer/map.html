@@ -483,6 +483,9 @@
                 
                 // Also trigger window resize for any other elements that might need it
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 10);
+
+                // Update URL to reflect info panel state
+                if (window.updateURL) window.updateURL();
             });
             
             // Initial map resize after everything is loaded
@@ -1288,11 +1291,19 @@ If you continue to experience issues, please refresh the page or contact support
                 if (currentTheme) params.set('theme', currentTheme.id);
                 if (currentSubtheme) params.set('subtheme', currentSubtheme.id);
                 if (currentIndicator) params.set('indicator', currentIndicator.id);
-                
+                if (isPanoramaMode || pendingPanoId) {
+                    params.set('pano_view', 'true');
+                    const panoId = (currentPanorama && currentPanorama.id) || pendingPanoId;
+                    if (panoId) params.set('pano_id', panoId);
+                }
+                if (document.querySelector('.two-column')?.classList.contains('collapsed')) {
+                    params.set('show_info', 'false');
+                }
                 const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
                 window.history.pushState({}, '', newUrl);
             }
-            
+            window.updateURL = updateURL;
+
             // Function to find theme by ID
             function findThemeById(themeId) {
                 return themesData.find(theme => theme.id === themeId);
@@ -1304,21 +1315,31 @@ If you continue to experience issues, please refresh the page or contact support
                 const themeId = params.get('theme');
                 const subthemeId = params.get('subtheme');
                 const indicatorId = params.get('indicator');
-                
+                const panoView = params.get('pano_view');
+                const panoId = params.get('pano_id');
+                const showInfo = params.get('show_info');
+
+                // Set pendingPanoId immediately so updateURL() preserves it during dropdown restoration
+                if (panoView === 'true' && panoId) {
+                    pendingPanoId = panoId;
+                } else if (panoView !== 'true') {
+                    pendingPanoId = null;
+                }
+
                 if (themeId) {
                     const theme = findThemeById(themeId);
                     if (theme) {
                         // Use setTimeout to ensure dropdowns are initialized
                         setTimeout(() => {
                             selectTheme(theme);
-                            
+
                             if (subthemeId) {
                                 // Small delay to ensure theme is processed
                                 setTimeout(() => {
                                     const subtheme = theme.subthemes.find(s => s.id === subthemeId);
                                     if (subtheme) {
                                         selectSubtheme(subtheme);
-                                        
+
                                         if (indicatorId) {
                                             // Small delay to ensure subtheme is processed
                                             setTimeout(() => {
@@ -1334,8 +1355,30 @@ If you continue to experience issues, please refresh the page or contact support
                         }, 100);
                     }
                 }
+
+                // Handle panorama state
+                if (panoView === 'true') {
+                    setTimeout(() => {
+                        if (!isPanoramaMode && window.enterPanoramaMode) {
+                            window.enterPanoramaMode();
+                            // pano_id auto-load is handled inside initializePanoramaMap after pins load
+                        }
+                    }, 300);
+                } else if (isPanoramaMode && window.exitPanoramaMode) {
+                    window.exitPanoramaMode();
+                }
+
+                // Handle info panel visibility
+                const twoColumn = document.querySelector('.two-column');
+                if (twoColumn) {
+                    const shouldCollapse = showInfo === 'false';
+                    const isCollapsed = twoColumn.classList.contains('collapsed');
+                    if (shouldCollapse !== isCollapsed) {
+                        document.getElementById('toggleInfoBox')?.click();
+                    }
+                }
             }
-            
+
             // Handle browser back/forward buttons
             window.addEventListener('popstate', () => {
                 loadStateFromURL();
@@ -2382,6 +2425,8 @@ If you continue to experience issues, please refresh the page or contact support
         let miniMap = null;
         let miniMapMarker = null;
         let rafId = null;
+        let pendingPanoId = null; // preserved during URL restore until panorama fully loads
+        let savedMapState = null; // saved display states of map elements before entering panorama
         
         // Initialize panorama functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -2430,46 +2475,79 @@ If you continue to experience issues, please refresh the page or contact support
             
             // Enter panorama mode
             function enterPanoramaMode() {
+                // Save current display states before hiding so we can restore them exactly
+                savedMapState = {
+                    map1: map1 ? map1.style.display : null,
+                    map2: map2 ? map2.style.display : null,
+                    mapPlaceholder: mapPlaceholder ? mapPlaceholder.style.display : null,
+                    loadingSpinner: loadingSpinner ? loadingSpinner.style.display : null,
+                };
                 // Hide map elements
                 if (map1) map1.style.display = 'none';
                 if (map2) map2.style.display = 'none';
                 if (mapPlaceholder) mapPlaceholder.style.display = 'none';
                 if (loadingSpinner) loadingSpinner.style.display = 'none';
-                
+
                 // Show panorama view
                 panoramaView.classList.remove('hidden');
-                
+
                 // Update button tooltip and icon
                 panoramaBtn.setAttribute('data-tooltip', 'Exit 360° Panorama Mode');
                 panoIcon.className = 'fa-solid fa-map';
-                
-                // Show X button with "Exit" text, hide back button (on panorama map)
-                exitPanoramaBtn.classList.remove('hidden');
-                exitPanoramaBtn.classList.remove('show-text');
-                exitButtonText.textContent = 'Exit to Normal Maps';
-                exitPanoramaBtn.setAttribute('data-tooltip', 'Exit to Normal Maps');
-                backToMapBtn.classList.add('hidden');
-                
+
                 isPanoramaMode = true;
-                
-                if (!panoramaMap) {
-                    initializePanoramaMap();
+                if (window.updateURL) window.updateURL();
+
+                if (currentPanorama) {
+                    // Re-enter directly into the 360° viewer — scene is still alive in the DOM
+                    panoramaMapContainer.classList.add('hidden');
+                    panoramaViewer.classList.remove('hidden');
+
+                    // Show back button, hide X button (viewer context)
+                    backToMapBtn.classList.remove('hidden');
+                    exitPanoramaBtn.classList.add('hidden');
+
+                    // Resume heading tracker (was paused on exit, scene is unchanged)
+                    if (panoramaScene) {
+                        const pin = panoramaPins[currentPanorama.id];
+                        startHeadingTracker(panoramaScene, pin ? (pin.heading || 0) : 0);
+                    }
                 } else {
-                    // Refresh the map to ensure it renders properly
-                    setTimeout(() => {
-                        panoramaMap.invalidateSize();
-                    }, 100);
+                    // No previous panorama — show the pin map to select one
+                    panoramaMapContainer.classList.remove('hidden');
+                    panoramaViewer.classList.add('hidden');
+
+                    // Show X button, hide back button (map context)
+                    exitPanoramaBtn.classList.remove('hidden');
+                    exitPanoramaBtn.classList.remove('show-text');
+                    exitButtonText.textContent = 'Exit to Normal Maps';
+                    exitPanoramaBtn.setAttribute('data-tooltip', 'Exit to Normal Maps');
+                    backToMapBtn.classList.add('hidden');
+
+                    if (!panoramaMap) {
+                        initializePanoramaMap();
+                    } else {
+                        setTimeout(() => { panoramaMap.invalidateSize(); }, 100);
+                    }
                 }
             }
-            
+            window.enterPanoramaMode = enterPanoramaMode;
+
             // Exit panorama mode
             function exitPanoramaMode() {
                 cancelHeadingTracker();
-                // Show map elements again
-                if (map1) map1.style.display = '';
-                if (map2) map2.style.display = '';
-                if (mapPlaceholder) mapPlaceholder.style.display = '';
-                if (loadingSpinner) loadingSpinner.style.display = '';
+                // Restore map elements to their exact pre-panorama display states
+                if (savedMapState) {
+                    if (map1 && savedMapState.map1 !== null) map1.style.display = savedMapState.map1;
+                    if (map2 && savedMapState.map2 !== null) map2.style.display = savedMapState.map2;
+                    if (mapPlaceholder && savedMapState.mapPlaceholder !== null) mapPlaceholder.style.display = savedMapState.mapPlaceholder;
+                    if (loadingSpinner && savedMapState.loadingSpinner !== null) loadingSpinner.style.display = savedMapState.loadingSpinner;
+                } else {
+                    if (map1) map1.style.display = '';
+                    if (map2) map2.style.display = '';
+                    if (mapPlaceholder) mapPlaceholder.style.display = '';
+                    if (loadingSpinner) loadingSpinner.style.display = '';
+                }
                 
                 // Hide panorama view
                 panoramaView.classList.add('hidden');
@@ -2483,17 +2561,11 @@ If you continue to experience issues, please refresh the page or contact support
                 backToMapBtn.classList.add('hidden');
                 
                 isPanoramaMode = false;
-                
-                // Clean up any active panorama scene
-                if (panoramaScene) {
-                    const scene = document.querySelector('#panoViewer a-scene');
-                    if (scene) {
-                        scene.parentNode.removeChild(scene);
-                    }
-                    panoramaScene = null;
-                }
+                if (window.updateURL) window.updateURL();
+                // Scene is kept alive in the hidden DOM so re-entry is instant
             }
-            
+            window.exitPanoramaMode = exitPanoramaMode;
+
             // Back to panorama map from 360° viewer
             function backToPanoramaMap() {
                 cancelHeadingTracker();
@@ -2509,7 +2581,9 @@ If you continue to experience issues, please refresh the page or contact support
                 backToMapBtn.classList.add('hidden');
                 
                 isPanoramaMode = true;
-                
+                currentPanorama = null;
+                if (window.updateURL) window.updateURL();
+
                 // Clean up A-Frame scene
                 if (panoramaScene) {
                     const scene = document.querySelector('#panoViewer a-scene');
@@ -2561,6 +2635,12 @@ If you continue to experience issues, please refresh the page or contact support
                 .then(response => response.json())
                 .then(data => {
                     addPanoramaPins(data.pins);
+                    // Restore specific panorama from URL if present
+                    const panoId = new URLSearchParams(window.location.search).get('pano_id');
+                    if (panoId && panoramaPins[panoId]) {
+                        const pin = panoramaPins[panoId];
+                        loadPanorama(pin.id, pin.title, pin.description, pin.imageUrl);
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading panorama config:', error);
@@ -2599,7 +2679,7 @@ If you continue to experience issues, please refresh the page or contact support
         // Build a pizza-slice SVG direction marker
         function createDirectionIcon(initialHeading) {
             // ── Shape variables ──────────────────────────────────────────
-            const iconSize    = 90;    // bounding box px (keep cx/cy = half)
+            const iconSize    = 70;    // bounding box px (keep cx/cy = half)
             const cx          = 35;    // tip x (center of icon)
             const cy          = 35;    // tip y (center of icon)
             const sliceAngle  = 65;    // total slice width in degrees
@@ -2671,7 +2751,9 @@ If you continue to experience issues, please refresh the page or contact support
         // Load 360° panorama in viewer
         function loadPanorama(id, title, description, imageUrl) {
             currentPanorama = { id, title, description, imageUrl };
-            
+            pendingPanoId = null;
+            if (window.updateURL) window.updateURL();
+
             // Update info display
             document.getElementById('panoramaTitle').textContent = title;
             document.getElementById('panoramaDescription').textContent = description;
