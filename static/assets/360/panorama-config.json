@@ -62,6 +62,15 @@
       "lng": -123.2401966667,
       "heading": 270,
       "imageUrl": "/static/assets/360/howe_sound_pano.jpg"
+    },
+    {
+      "id": "tantalus-range",
+      "title": "Tantalus Range",
+      "description": "This view from over the Cheakamus River shows the vast expanse of the Tanatalus Range. Down in the valley below is deep coastal rainforest and on the mountain tops are enormous galaciers.",
+      "lat": 49.8451583333,
+      "lng": -123.1516702778,
+      "heading": 300,
+      "imageUrl": "/static/assets/360/tantalus_range_pano.jpg"
     }
   ]
 }

@@ -755,58 +755,6 @@ body, html {
     transform: translateX(-100%);
   }
 
-  /* Burger button — show on mobile */
-  .mobile-menu-btn {
-    display: flex;
-  }
-
-  /* Toolbar buttons right: only holds burger on mobile */
-  .toolbar-buttons-right {
-    position: relative;
-    flex-wrap: nowrap;
-  }
-
-  /* Panel becomes an absolute dropdown */
-  .mobile-menu-panel {
-    display: none;
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 8px;
-    box-shadow: var(--shadow);
-    z-index: 1001;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
-    min-width: 180px;
-  }
-
-  .mobile-menu-panel.open {
-    display: flex;
-  }
-
-  /* Toggle info button stays visible outside the burger */
-  .toolbar-buttons-right .toggle-info-btn {
-    margin-left: 0;
-  }
-
-  /* Reset button margins/sizes inside the panel */
-  .mobile-menu-panel .reset-filters-btn,
-  .mobile-menu-panel .help-modal-btn,
-  .mobile-menu-panel .dark-mode-toggle,
-  .mobile-menu-panel .view-mode-btn,
-  .mobile-menu-panel .fullscreen-btn,
-  .mobile-menu-panel .git-hub-link-btn,
-  .mobile-menu-panel .theme-collections-btn,
-  .mobile-menu-panel .panorama-360-btn {
-    margin-left: 0;
-    padding: 10px 12px;
-    font-size: 0.95em;
-  }
-
   .logo-container {
     margin-left: 20px;
     margin-right: 10px;
@@ -836,25 +784,82 @@ body, html {
     font-size: 13px;
   }
 
-  /* Theme collections sub-dropdown inside burger panel */
-  .mobile-menu-panel .theme-collections-wrapper {
-    position: relative;
-  }
+}
 
-  .mobile-menu-panel #themeCollectionsMenu {
-    right: 0;
-    left: auto;
-    top: calc(100% + 4px);
-    min-width: 180px;
-    font-size: 0.9em;
-    max-width: 90vw;
-    box-sizing: border-box;
-  }
+/* =================================
+   Burger menu — activates when toolbar wraps to a second row
+   (class toggled by JS ResizeObserver, no media query needed)
+   ================================= */
+.toolbar-top.toolbar-wrapped .mobile-menu-btn {
+  display: flex;
+}
 
-  .mobile-menu-panel #themeCollectionsMenu a {
-    padding: 8px 12px;
-    font-size: 0.9em;
-  }
+.toolbar-top.toolbar-wrapped .toolbar-buttons-right {
+  position: relative;
+  flex-wrap: nowrap;
+}
+
+.toolbar-top.toolbar-wrapped .mobile-menu-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  box-shadow: var(--shadow);
+  z-index: 1001;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.toolbar-top.toolbar-wrapped .mobile-menu-panel.open {
+  display: grid;
+}
+
+/* All buttons and the theme-collections wrapper fill their grid cell evenly */
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .reset-filters-btn,
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .help-modal-btn,
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .dark-mode-toggle,
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .view-mode-btn,
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .fullscreen-btn,
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .toggle-info-btn,
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .git-hub-link-btn,
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .theme-collections-btn,
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .panorama-360-btn {
+  margin-left: 0;
+  padding: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .theme-collections-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .theme-collections-wrapper .theme-collections-btn {
+  width: 100%;
+}
+
+.toolbar-top.toolbar-wrapped .mobile-menu-panel .theme-collections-wrapper {
+  position: relative;
+}
+
+.toolbar-top.toolbar-wrapped .mobile-menu-panel #themeCollectionsMenu {
+  right: 0;
+  left: auto;
+  top: calc(100% + 4px);
+  min-width: 180px;
+  font-size: 0.9em;
+  max-width: 90vw;
+  box-sizing: border-box;
+}
+
+.toolbar-top.toolbar-wrapped .mobile-menu-panel #themeCollectionsMenu a {
+  padding: 8px 12px;
+  font-size: 0.9em;
 }
 
 /* Allow scrolling on mobile */
@@ -1810,6 +1815,15 @@ body, html {
 
 .pano-viewer:active {
   cursor: grabbing;
+}
+
+/* Panorama pin FA icon — clear Leaflet's default white box */
+.pano-fa-icon {
+  background: none !important;
+  border: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Custom leaflet popup styles for panorama pins */

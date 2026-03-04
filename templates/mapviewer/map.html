@@ -53,13 +53,13 @@
           </div>
         </div>
         <div class="toolbar-buttons-right">
-          <button id="toggleInfoBox" class="toggle-info-btn" data-tooltip="Hide Information Pane">
-            <i class="fas fa-eye-slash"></i>
-          </button>
           <button id="mobileMenuToggle" class="mobile-menu-btn" aria-label="Menu" aria-expanded="false">
             <i class="fas fa-bars"></i>
           </button>
           <div class="mobile-menu-panel" id="mobileMenuPanel">
+            <button id="toggleInfoBox" class="toggle-info-btn" data-tooltip="Hide Information Pane">
+              <i class="fas fa-eye-slash"></i>
+            </button>
             <button id="resetFilters" class="reset-filters-btn" data-tooltip="Reset All Filters">
               <i class="fa-solid fa-filter-circle-xmark"></i>
             </button>
@@ -183,7 +183,7 @@
                     <i class="fas fa-chevron-up"></i>
                   </button>
                 </div>
-                <p id="panoramaDescription" class="panorama-description">Click on a pin to view the 360° panorama</p>
+                <p id="panoramaDescription" class="panorama-description">Click on a marker to open the 360° panorama</p>
                 <div id="panoramaMiniMap" class="panorama-mini-map hidden"></div>
               </div>
               
@@ -615,7 +615,49 @@
                 });
             }
         });
-        
+
+        // Detect toolbar wrapping and toggle burger menu accordingly
+        (function () {
+            const toolbar = document.querySelector('.toolbar-top');
+            const firstDropdown = document.querySelector('#themeDropdown');
+            const buttonsRight = document.querySelector('.toolbar-buttons-right');
+            if (!toolbar || !firstDropdown || !buttonsRight) return;
+
+            // Items are on different rows when buttons-right top >= dropdown bottom
+            // (they no longer overlap vertically). This is immune to height differences
+            // between flex items that would fool a top-vs-top comparison.
+            function isOnNewRow() {
+                const dropdownBottom = firstDropdown.getBoundingClientRect().bottom;
+                const buttonsTop    = buttonsRight.getBoundingClientRect().top;
+                return buttonsTop >= dropdownBottom;
+            }
+
+            let checking = false;
+            function checkWrap() {
+                if (checking) return;
+                checking = true;
+
+                const isWrapped = toolbar.classList.contains('toolbar-wrapped');
+
+                if (isWrapped) {
+                    // Temporarily remove class and measure the full-width layout
+                    toolbar.classList.remove('toolbar-wrapped');
+                    if (isOnNewRow()) toolbar.classList.add('toolbar-wrapped');
+                } else {
+                    if (isOnNewRow()) toolbar.classList.add('toolbar-wrapped');
+                }
+
+                checking = false;
+            }
+
+            window.addEventListener('resize', checkWrap);
+            if (typeof ResizeObserver !== 'undefined') {
+                new ResizeObserver(checkWrap).observe(toolbar);
+            }
+            // Run once after layout settles
+            requestAnimationFrame(checkWrap);
+        })();
+
         // Define Dropdown class first
         class Dropdown {
             constructor(element) {
@@ -2765,10 +2807,18 @@ If you continue to experience issues, please refresh the page or contact support
             return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         }
 
+        const fontAwesomeIcon = L.divIcon({
+            html: '<i class="fas fa-panorama" style="font-size:1.6rem;color: #1b5e20;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));"></i>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            className: 'pano-fa-icon'
+        });
+
         function addPanoramaPins(pins) {
             pins.forEach(pin => {
                 panoramaPins[pin.id] = pin;
                 const marker = L.marker([pin.lat, pin.lng], {
+                    icon: fontAwesomeIcon,
                     className: 'panorama-pin'
                 }).addTo(panoramaMap);
                 
