@@ -172,7 +172,12 @@
               
               <!-- Panorama Title and Description -->
               <div class="panorama-info">
-                <h2 id="panoramaTitle" class="panorama-title">Select a Location</h2>
+                <div class="panorama-info-header">
+                  <h2 id="panoramaTitle" class="panorama-title">Select a Location</h2>
+                  <button id="panoramaInfoToggle" class="panorama-info-toggle" data-tooltip="Collapse panel">
+                    <i class="fas fa-chevron-up"></i>
+                  </button>
+                </div>
                 <p id="panoramaDescription" class="panorama-description">Click on a pin to view the 360° panorama</p>
                 <div id="panoramaMiniMap" class="panorama-mini-map hidden"></div>
               </div>
@@ -2512,6 +2517,13 @@ If you continue to experience issues, please refresh the page or contact support
             panoramaBtn.addEventListener('click', function() {
                 togglePanoramaMode();
             });
+
+            // Panorama info panel collapse toggle
+            document.getElementById('panoramaInfoToggle').addEventListener('click', function() {
+                const info = this.closest('.panorama-info');
+                const collapsed = info.classList.toggle('collapsed');
+                this.setAttribute('data-tooltip', collapsed ? 'Expand panel' : 'Collapse panel');
+            });
             
             // Back to panorama map button click handler
             backToMapBtn.addEventListener('click', function() {
@@ -2745,15 +2757,15 @@ If you continue to experience issues, please refresh the page or contact support
         // Build a pizza-slice SVG direction marker
         function createDirectionIcon(initialHeading) {
             // ── Shape variables ──────────────────────────────────────────
-            const iconSize    = 70;    // bounding box px (keep cx/cy = half)
-            const cx          = 35;    // tip x (center of icon)
-            const cy          = 35;    // tip y (center of icon)
-            const sliceAngle  = 65;    // total slice width in degrees
-            const sliceRadius = 26;    // tip → crust distance in px
+            const iconSize    = 90;    // bounding box px (keep cx/cy = half)
+            const cx          = 45;    // tip x (center of icon)
+            const cy          = 45;    // tip y (center of icon)
+            const sliceAngle  = 90;    // total slice width in degrees
+            const sliceRadius = 35;    // tip → crust distance in px
             const curveOffset = 8;     // how far the crust bows outward in px
-            const dotRadius   = 6;     // center dot radius in px
-            const fillColor   = 'rgba(76,175,80,0.78)';
-            const dotFill     = '#4caf50';
+            const dotRadius   = 8;     // center dot radius in px
+            const fillColor   = 'rgba(128, 36, 191, 0.50)';
+            const dotFill     = '#8024bf';
             const dotStroke   = '#ffffff';
             // ────────────────────────────────────────────────────────────
 
