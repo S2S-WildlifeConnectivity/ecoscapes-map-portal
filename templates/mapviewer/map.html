@@ -1350,6 +1350,9 @@ If you continue to experience issues, please refresh the page or contact support
             // Function to update URL with current state
             function updateURL() {
                 const params = new URLSearchParams();
+                // Preserve theme_group so the server-side filter is not lost on navigation
+                const existingGroup = new URLSearchParams(window.location.search).get('theme_group');
+                if (existingGroup) params.set('theme_group', existingGroup);
                 if (currentTheme) params.set('theme', currentTheme.id);
                 if (currentSubtheme) params.set('subtheme', currentSubtheme.id);
                 if (currentIndicator) params.set('indicator', currentIndicator.id);

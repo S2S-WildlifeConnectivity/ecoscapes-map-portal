@@ -4,25 +4,25 @@
       "id": "all-themes",
       "name": "All Themes",
       "icon": "fa-solid fa-check-double",
-      "themeIds": ["01-ecosystem-resileince", "02-ecosystem-health", "03-biogeoclimatic-zones", "04-focal-species", "05-climate-change-refugia", "06-connectivity-network", "07-habitat-cores", "08-wildlife-corridors", "09-resistance-to-movement"]
+      "themeIds": ["01-biodiversity-conservation", "02-ecosystem-integrity", "03-in-situ-biodiversity", "04-climate-change-refugia", "05-connectivity-network"]
     },
     {
       "id": "biodiversity",
       "name": "Biodiversity",
       "icon": "fa-leaf",
-      "themeIds": ["02-ecosystem-health", "03-biogeoclimatic-zones", "04-species-occurrences"]
+      "themeIds": ["01-biodiversity-conservation"]
     },
     {
       "id": "connectivity",
       "name": "Connectivity",
       "icon": "fa-paw",
-      "themeIds": ["07-habitat-cores", "08-wildlife-corridors", "06-connectivity-network"]
+      "themeIds": ["03-in-situ-biodiversity"]
     },
     {
       "id": "featured",
       "name": "Featured",
       "icon": "fa-star",
-      "themeIds": ["01-ecosystem-resileince", "04-focal-species"]
+      "themeIds": ["04-climate-change-refugia"]
     }
   ],
   "themes": [
