@@ -508,43 +508,24 @@
             // On mobile, start on the map view (info panel hidden)
             if (window.innerWidth <= 768) {
                 twoColumnLayout.classList.add('collapsed');
-                toggleIcon.className = 'fas fa-circle-info';
-                toggleInfoBox.setAttribute('data-tooltip', 'Show Info Panel');
+                toggleIcon.className = 'fa-solid fa-eye';
+                toggleInfoBox.setAttribute('data-tooltip', 'Show Information Pane');
             }
 
             // Toggle the info box
             toggleInfoBox.addEventListener('click', () => {
-                // Check if we're on mobile
-                const isMobile = window.innerWidth <= 768;
-                
                 // Toggle the 'collapsed' class on the two-column layout
                 twoColumnLayout.classList.toggle('collapsed');
-                
-                // Toggle between filled/unfilled icons and update tooltip
+
                 const isCollapsed = twoColumnLayout.classList.contains('collapsed');
-                
-                if (isMobile) {
-                    // On mobile: swap between map view and info panel view
-                    if (isCollapsed) {
-                        // Now showing map — offer to switch to info
-                        toggleIcon.className = 'fas fa-circle-info';
-                        toggleInfoBox.setAttribute('data-tooltip', 'Show Info Panel');
-                    } else {
-                        // Now showing info — offer to switch back to map
-                        toggleIcon.className = 'fas fa-map';
-                        toggleInfoBox.setAttribute('data-tooltip', 'Back to Map');
-                    }
+                if (isCollapsed) {
+                    toggleIcon.className = 'fa-solid fa-eye';
+                    toggleInfoBox.classList.add('collapsed');
+                    toggleInfoBox.setAttribute('data-tooltip', 'Show Information Pane');
                 } else {
-                    // On desktop: collapsed = hidden, not collapsed = visible
-                    if (isCollapsed) {
-                        toggleIcon.className = 'fa-solid fa-eye';
-                        toggleInfoBox.classList.add('collapsed');
-                        toggleInfoBox.setAttribute('data-tooltip', 'Show Information Pane');
-                    } else {
-                        toggleIcon.className = 'fa-solid fa-eye-slash';
-                        toggleInfoBox.classList.remove('collapsed');
-                        toggleInfoBox.setAttribute('data-tooltip', 'Hide Information Pane');
-                    }
+                    toggleIcon.className = 'fa-solid fa-eye-slash';
+                    toggleInfoBox.classList.remove('collapsed');
+                    toggleInfoBox.setAttribute('data-tooltip', 'Hide Information Pane');
                 }
                 
                 // Update tooltip text immediately if visible
