@@ -184,6 +184,65 @@
               
               <!-- 360° Viewer Container -->
               <div id="panoramaViewer" class="panorama-viewer hidden">
+                <!-- Drone loading screen -->
+                <div id="panoLoader" class="pano-loader hidden">
+                  <div class="pano-drone-wrap">
+                    <svg class="pano-drone-svg" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                      <!-- Spinning propeller blades (top-down view) -->
+                      <g class="pdg ptl">
+                        <ellipse class="pano-prop-blade" cx="25" cy="25" rx="18" ry="3.5"/>
+                        <ellipse class="pano-prop-blade" cx="25" cy="25" rx="3.5" ry="18"/>
+                      </g>
+                      <g class="pdg ptr">
+                        <ellipse class="pano-prop-blade" cx="115" cy="25" rx="18" ry="3.5"/>
+                        <ellipse class="pano-prop-blade" cx="115" cy="25" rx="3.5" ry="18"/>
+                      </g>
+                      <g class="pdg pbl">
+                        <ellipse class="pano-prop-blade" cx="25" cy="115" rx="18" ry="3.5"/>
+                        <ellipse class="pano-prop-blade" cx="25" cy="115" rx="3.5" ry="18"/>
+                      </g>
+                      <g class="pdg pbr">
+                        <ellipse class="pano-prop-blade" cx="115" cy="115" rx="18" ry="3.5"/>
+                        <ellipse class="pano-prop-blade" cx="115" cy="115" rx="3.5" ry="18"/>
+                      </g>
+                      <!-- Arms -->
+                      <line class="pano-arm-line" x1="56" y1="56" x2="34" y2="34" stroke-width="3.5" stroke-linecap="round"/>
+                      <line class="pano-arm-line" x1="84" y1="56" x2="106" y2="34" stroke-width="3.5" stroke-linecap="round"/>
+                      <line class="pano-arm-line" x1="56" y1="84" x2="34" y2="106" stroke-width="3.5" stroke-linecap="round"/>
+                      <line class="pano-arm-line" x1="84" y1="84" x2="106" y2="106" stroke-width="3.5" stroke-linecap="round"/>
+                      <!-- Body -->
+                      <rect x="48" y="48" width="44" height="44" rx="10" fill="url(#pBodyGrad)"/>
+                      <!-- Camera lens -->
+                      <circle cx="70" cy="70" r="12" fill="#1e3a8a"/>
+                      <circle cx="70" cy="70" r="7.5" fill="#0f172a"/>
+                      <circle cx="70" cy="70" r="4" fill="#3b82f6" opacity="0.9"/>
+                      <circle cx="66" cy="66" r="1.5" fill="white" opacity="0.7"/>
+                      <!-- Prop hubs -->
+                      <circle cx="25"  cy="25"  r="3.5" fill="#94a3b8"/>
+                      <circle cx="115" cy="25"  r="3.5" fill="#94a3b8"/>
+                      <circle cx="25"  cy="115" r="3.5" fill="#94a3b8"/>
+                      <circle cx="115" cy="115" r="3.5" fill="#94a3b8"/>
+                      <defs>
+                        <radialGradient id="pBodyGrad" cx="35%" cy="30%">
+                          <stop offset="0%"   stop-color="#3b82f6"/>
+                          <stop offset="100%" stop-color="#1e40af"/>
+                        </radialGradient>
+                      </defs>
+                    </svg>
+                    <div class="pano-drone-shadow"></div>
+                  </div>
+                  <div class="pano-loader-msgs">
+                    <span class="pano-msg">Drone airborne, hold tight...</span>
+                    <span class="pano-msg">Ascending to altitude...</span>
+                    <span class="pano-msg">Surveying the landscape...</span>
+                    <span class="pano-msg">Worth the wait — almost there!</span>
+                  </div>
+                  <div class="pano-signal">
+                    <div class="pano-signal-dot"></div>
+                    <div class="pano-signal-dot"></div>
+                    <div class="pano-signal-dot"></div>
+                  </div>
+                </div>
                 <div id="panoViewer" class="pano-viewer"></div>
               </div>
             </div>
@@ -2568,6 +2627,7 @@ If you continue to experience issues, please refresh the page or contact support
 
             // Back to panorama map from 360° viewer
             function backToPanoramaMap() {
+                document.getElementById('panoLoader').classList.add('hidden');
                 cancelHeadingTracker();
                 // Show panorama map container
                 panoramaMapContainer.classList.remove('hidden');
@@ -2791,7 +2851,6 @@ If you continue to experience issues, please refresh the page or contact support
             // Hide map container and show viewer
             panoramaMapContainer.classList.add('hidden');
             panoramaViewer.classList.remove('hidden');
-            panoramaViewer.classList.add('loading');
             
             // Show back button, hide X button (when viewing 360° panorama)
             const backToMapBtn = document.getElementById('backToMap');
@@ -2809,6 +2868,7 @@ If you continue to experience issues, please refresh the page or contact support
             const scene = document.createElement('a-scene');
             scene.setAttribute('embedded', '');
             scene.setAttribute('vr-mode-ui', 'enabled: false');
+            scene.setAttribute('loading-screen', 'enabled: false');
             scene.style.background = '#000';
             
             // Add 360° image
@@ -2828,15 +2888,22 @@ If you continue to experience issues, please refresh the page or contact support
             scene.appendChild(camera);
             
             // Add scene to viewer
+            panoramaScene = scene;
             document.getElementById('panoViewer').appendChild(scene);
-            
-            // Force A-Frame to initialize, then start heading tracker
-            setTimeout(() => {
-                panoramaViewer.classList.remove('loading');
-                panoramaScene = scene;
+
+            // Show drone loader; reveal scene once the texture has actually loaded
+            const panoLoader = document.getElementById('panoLoader');
+            panoLoader.classList.remove('hidden');
+
+            const startScene = () => {
+                if (panoLoader.classList.contains('hidden')) return; // already dismissed
+                panoLoader.classList.add('hidden');
                 const pin = panoramaPins[id];
-                startHeadingTracker(scene, pin ? (pin.heading || 0) : 0);
-            }, 500);
+                startHeadingTracker(panoramaScene, pin ? (pin.heading || 0) : 0);
+            };
+            sky.addEventListener('materialtextureloaded', startScene, { once: true });
+            // Safety fallback: dismiss loader after 20s if the event never fires
+            setTimeout(() => { if (!panoLoader.classList.contains('hidden')) startScene(); }, 20000);
         }
         
         // Make loadPanorama available globally
