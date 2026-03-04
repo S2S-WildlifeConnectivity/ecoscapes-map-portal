@@ -6,7 +6,62 @@
       "description": "A view from the forested slopes above Garibaldi Highlands.",
       "lat": 49.7456516667,
       "lng": -123.0894002778,
+      "heading": 320,
       "imageUrl": "/static/assets/360/garibaldi_highlands_2_pano.jpg"
+    },
+    {
+      "id": "feather-park",
+      "title": "Sp'akw'us Feather Park",
+      "description": "A view from Sp'akw'us Feather Park at the heart of Squamish. The Átl'ḵa7tsem (Howe Sound) extends to the South, the Squamish River to the West, Downtown to the north, and the Britannia Range towers over Siyám Smánit (The Chief) to the East",
+      "lat": 49.6850916667,
+      "lng": -123.1661530556,
+      "heading": 300,
+      "imageUrl": "/static/assets/360/feather_park_pano_2.jpg"
+    },
+    {
+      "id": "highway-99-rohr",
+      "title": "Highway 99 - Below Mount Rohr",
+      "description": "A few from Highway 99 in the shadow of Mount Rohr (2423m). This snow covered landscape is densely forested and sits between many mountain peaks.",
+      "lat": 50.3814016667,
+      "lng": -122.41351,
+      "heading": 100,
+      "imageUrl": "/static/assets/360/joffre_lakes_pano_2.jpg"
+    },
+    {
+      "id": "duffey-lake",
+      "title": "Highway 99 - Duffey Lake",
+      "description": "A few from Highway 99 next to Duffey Lake. This is a tight landscape with steep rising mountain slopes and vast water accumulation in the valley bottom.",
+      "lat": 50.41177,
+      "lng": -122.28984,
+      "heading": 240,
+      "imageUrl": "/static/assets/360/duffey_lake_pano_2.jpg"
+    },
+    {
+      "id": "pemberton-meadows",
+      "title": "Pemberton Meadows",
+      "description": "A few from the hillside below Semaphore Lakes shows the human modified valley bottom dominated by argiculture. The Lillooet River snakes along the valleys Northern edge brining fresh water and nutrients into the valley bottom.",
+      "lat": 50.521955,
+      "lng": -123.0248219444,
+      "heading": 145,
+      "imageUrl": "/static/assets/360/pemberton_meadows_pano.jpg"
+    },
+    {
+      "id": "soo-valley",
+      "title": "Soo Valley",
+      "description": "Soo valley sits to the West of Wedge Mountain (2,890m) and brings glacial melt water down into valley bottom via the Soo River. The River is dammed and used for hydroelectricity which has created flood zones near the bottom of the valley.",
+      "lat": 50.2277383333,
+      "lng": -122.9062516667,
+      "heading": 150,
+      "imageUrl": "/static/assets/360/soo_valley_pano.jpg"
+    },
+    {
+      "id": "howe-sound",
+      "title": "Átl'ḵa7tsem (Howe Sound)",
+      "description": "This view from the Eastern side of the Átl'ḵa7tsem (Howe Sound) shows the vast expanse of marine habitat in this region. Human settlement on the shores of Átl'ḵa7tsem (Howe Sound) have caused vast damage to this marien ecosystem, but with time and effort, marine life is recovering.",
+      "lat": 49.4499266667,
+      "lng": -123.2401966667,
+      "heading": 270,
+      "imageUrl": "/static/assets/360/howe_sound_pano.jpg"
     }
   ]
 }

@@ -174,6 +174,7 @@
               <div class="panorama-info">
                 <h2 id="panoramaTitle" class="panorama-title">Select a Location</h2>
                 <p id="panoramaDescription" class="panorama-description">Click on a pin to view the 360° panorama</p>
+                <div id="panoramaMiniMap" class="panorama-mini-map hidden"></div>
               </div>
               
               <!-- Panorama Map Container -->
@@ -2377,6 +2378,10 @@ If you continue to experience issues, please refresh the page or contact support
         let currentPanorama = null;
         let panoramaScene = null;
         let isPanoramaMode = false;
+        let panoramaPins = {};
+        let miniMap = null;
+        let miniMapMarker = null;
+        let rafId = null;
         
         // Initialize panorama functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -2459,6 +2464,7 @@ If you continue to experience issues, please refresh the page or contact support
             
             // Exit panorama mode
             function exitPanoramaMode() {
+                cancelHeadingTracker();
                 // Show map elements again
                 if (map1) map1.style.display = '';
                 if (map2) map2.style.display = '';
@@ -2490,6 +2496,7 @@ If you continue to experience issues, please refresh the page or contact support
             
             // Back to panorama map from 360° viewer
             function backToPanoramaMap() {
+                cancelHeadingTracker();
                 // Show panorama map container
                 panoramaMapContainer.classList.remove('hidden');
                 panoramaViewer.classList.add('hidden');
@@ -2512,15 +2519,16 @@ If you continue to experience issues, please refresh the page or contact support
                     panoramaScene = null;
                 }
                 
-                // Reset info text
+                // Reset info text and hide minimap
                 document.getElementById('panoramaTitle').textContent = 'Select a Location';
                 document.getElementById('panoramaDescription').textContent = 'Click on a pin to view the 360° panorama';
+                document.getElementById('panoramaMiniMap').classList.add('hidden');
 
                 // Re-center and resize the map after the container becomes visible
                 setTimeout(() => {
                     if (panoramaMap) {
                         panoramaMap.invalidateSize();
-                        panoramaMap.setView([49.7016, -123.1557], 8.5);
+                        panoramaMap.setView([50.20665, -122.76233], 8.7);
                     }
                 }, 100);
             }
@@ -2530,8 +2538,9 @@ If you continue to experience issues, please refresh the page or contact support
         function initializePanoramaMap() {
             const mapElement = document.getElementById('panoramaMap');
             
-            // Create map centered on Squamish
-            panoramaMap = L.map('panoramaMap').setView([49.7016, -123.1557], 8.5);
+            // Create map centered on Garibaldi
+            panoramaMap = L.map('panoramaMap', { zoomControl: false }).setView([50.20665, -122.76233], 8.7);
+            L.control.zoom({ position: 'bottomright' }).addTo(panoramaMap);
             
             // Add tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -2539,11 +2548,11 @@ If you continue to experience issues, please refresh the page or contact support
                 maxZoom: 30
             }).addTo(panoramaMap);
             
-            // Add window resize listener to keep map centered on Squamish
+            // Add window resize listener to keep map centered on Garibaldi
             window.addEventListener('resize', () => {
                 setTimeout(() => {
                     panoramaMap.invalidateSize();
-                    panoramaMap.setView([49.7016, -123.1557], 8.5);
+                    panoramaMap.setView([50.20665, -122.76233], 8.7);
                 }, 100);
             });
             
@@ -2560,8 +2569,13 @@ If you continue to experience issues, please refresh the page or contact support
         }
         
         // Add panorama pins to the map
+        function safeAttr(str) {
+            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
         function addPanoramaPins(pins) {
             pins.forEach(pin => {
+                panoramaPins[pin.id] = pin;
                 const marker = L.marker([pin.lat, pin.lng], {
                     className: 'panorama-pin'
                 }).addTo(panoramaMap);
@@ -2571,7 +2585,7 @@ If you continue to experience issues, please refresh the page or contact support
                     <div style="min-width: 200px;">
                         <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 16px; font-weight: 600;">${pin.title}</h3>
                         <p style="margin: 0 0 12px 0; color: var(--text-light); font-size: 13px; line-height: 1.4;">${pin.description}</p>
-                        <button class="view-pano-btn" onclick="loadPanorama('${pin.id}', '${pin.title}', '${pin.description}', '${pin.imageUrl}')">
+                        <button class="view-pano-btn" onclick="loadPanorama('${safeAttr(pin.id)}', '${safeAttr(pin.title)}', '${safeAttr(pin.description)}', '${safeAttr(pin.imageUrl)}')">
                             <i class="fas fa-panorama"></i> View 360° Panorama
                         </button>
                     </div>
@@ -2582,6 +2596,78 @@ If you continue to experience issues, please refresh the page or contact support
             });
         }
         
+        // Build a pizza-slice SVG direction marker
+        function createDirectionIcon(initialHeading) {
+            // ── Shape variables ──────────────────────────────────────────
+            const iconSize    = 90;    // bounding box px (keep cx/cy = half)
+            const cx          = 35;    // tip x (center of icon)
+            const cy          = 35;    // tip y (center of icon)
+            const sliceAngle  = 65;    // total slice width in degrees
+            const sliceRadius = 26;    // tip → crust distance in px
+            const curveOffset = 8;     // how far the crust bows outward in px
+            const dotRadius   = 6;     // center dot radius in px
+            const fillColor   = 'rgba(76,175,80,0.78)';
+            const dotFill     = '#4caf50';
+            const dotStroke   = '#ffffff';
+            // ────────────────────────────────────────────────────────────
+
+            const half = (sliceAngle / 2) * Math.PI / 180;
+            const lx = cx - sliceRadius * Math.sin(half);
+            const ly = cy - sliceRadius * Math.cos(half);
+            const rx = cx + sliceRadius * Math.sin(half);
+            const ry = cy - sliceRadius * Math.cos(half);
+            // Arc radius — larger than sliceRadius makes the crust bow outward
+            const arcR = sliceRadius - curveOffset;
+
+            const svg = `<svg width="${iconSize}" height="${iconSize}"
+                              viewBox="0 0 ${iconSize} ${iconSize}"
+                              xmlns="http://www.w3.org/2000/svg"
+                              class="pano-wedge-marker"
+                              style="overflow:visible;transform-origin:50% 50%;transform:rotate(${initialHeading}deg)">
+                <filter id="pshadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.35"/>
+                </filter>
+                <path d="M ${cx} ${cy} L ${lx.toFixed(2)} ${ly.toFixed(2)} A ${arcR} ${arcR} 0 0 1 ${rx.toFixed(2)} ${ry.toFixed(2)} Z"
+                      fill="${fillColor}" filter="url(#pshadow)"/>
+                <circle cx="${cx}" cy="${cy}" r="${dotRadius}"
+                        fill="${dotFill}" stroke="${dotStroke}" stroke-width="2.5"
+                        filter="url(#pshadow)"/>
+            </svg>`;
+
+            return L.divIcon({
+                className: '',
+                html: svg,
+                iconSize: [iconSize, iconSize],
+                iconAnchor: [cx, cy]
+            });
+        }
+
+        // Cancel the heading RAF loop
+        function cancelHeadingTracker() {
+            if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+        }
+
+        // Start updating the minimap wedge from A-Frame camera rotation
+        function startHeadingTracker(scene, initialHeading) {
+            cancelHeadingTracker();
+            function tick() {
+                const cameraEl = scene.querySelector('a-camera');
+                if (cameraEl) {
+                    const rot = cameraEl.getAttribute('rotation');
+                    if (rot) {
+                        const bearing = ((initialHeading - rot.y) % 360 + 360) % 360;
+                        const markerEl = document.querySelector('.pano-wedge-marker');
+                        if (markerEl) markerEl.style.transform = `rotate(${bearing}deg)`;
+                    }
+                }
+                rafId = requestAnimationFrame(tick);
+            }
+            rafId = requestAnimationFrame(tick);
+        }
+
         // Load 360° panorama in viewer
         function loadPanorama(id, title, description, imageUrl) {
             currentPanorama = { id, title, description, imageUrl };
@@ -2589,6 +2675,32 @@ If you continue to experience issues, please refresh the page or contact support
             // Update info display
             document.getElementById('panoramaTitle').textContent = title;
             document.getElementById('panoramaDescription').textContent = description;
+
+            // Update minimap
+            const pin = panoramaPins[id];
+            if (pin) {
+                const miniMapEl = document.getElementById('panoramaMiniMap');
+                miniMapEl.classList.remove('hidden');
+                const dirIcon = createDirectionIcon(pin.heading || 0);
+                if (!miniMap) {
+                    miniMap = L.map('panoramaMiniMap', {
+                        zoomControl: false,
+                        dragging: false,
+                        scrollWheelZoom: false,
+                        doubleClickZoom: false,
+                        boxZoom: false,
+                        keyboard: false,
+                        attributionControl: false
+                    }).setView([pin.lat, pin.lng], 10);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);
+                    miniMapMarker = L.marker([pin.lat, pin.lng], { icon: dirIcon }).addTo(miniMap);
+                } else {
+                    miniMap.setView([pin.lat, pin.lng], 10);
+                    miniMapMarker.setLatLng([pin.lat, pin.lng]);
+                    miniMapMarker.setIcon(dirIcon);
+                }
+                setTimeout(() => miniMap.invalidateSize(), 50);
+            }
             
             // Show loading state
             const panoramaViewer = document.getElementById('panoramaViewer');
@@ -2636,11 +2748,12 @@ If you continue to experience issues, please refresh the page or contact support
             // Add scene to viewer
             document.getElementById('panoViewer').appendChild(scene);
             
-            // Force A-Frame to initialize
+            // Force A-Frame to initialize, then start heading tracker
             setTimeout(() => {
-                // Remove loading state when scene is ready
                 panoramaViewer.classList.remove('loading');
                 panoramaScene = scene;
+                const pin = panoramaPins[id];
+                startHeadingTracker(scene, pin ? (pin.heading || 0) : 0);
             }, 500);
         }
         
