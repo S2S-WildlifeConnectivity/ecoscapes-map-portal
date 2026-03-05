@@ -178,15 +178,6 @@
       "icon": "icon-connectivity-network",
       "subthemes": [
         {
-          "id": "05-01-climate-refugia",
-          "name": "Climate Refugia",
-          "description": "Areas of the landscape that remain buffered from the most severe effects of climate change, enabling sensitive species to survive locally. They are characterized by stable microclimates, unique hydrological features, or protective topography that provides sanctuary. In the context of biodiversity and landscape ecology, refugia are vital for species survival, acting as \"arks\" that safeguard genetic diversity and ecological communities. They serve as source populations for future re-colonization of the surrounding landscape, thereby supporting ecosystem resilience and function.",
-          "icon": "icon-climate-change",
-          "indicators": [
-            "05-01-01-climate-refugia"
-          ]
-        },
-        {
           "id": "05-02-priority-linkages",
           "name": "Priority Linkages",
           "description": "Modelled pathways of ecological connectivity that provide the most efficient movement corridors for wildlife and gene flow across the widest range of species. These pathways identify areas of least resistance for animals and plants to move between protected areas and other high-value habitats, including core and stepping-stone patches found in fragmented landscapes at lower elevations and in valley bottoms. Mapping these movement corridors helps guide the development of practical conservation solutions that deliver the greatest benefits for vulnerable plants and animals.",
