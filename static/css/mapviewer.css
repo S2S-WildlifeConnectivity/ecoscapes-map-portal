@@ -74,6 +74,14 @@ body, html {
   transition: background-color var(--transition), color var(--transition);
 }
 
+/* App Container - flex column so two-column fills remaining height dynamically */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* =================================
    Utility Classes
    ================================= */
@@ -93,7 +101,8 @@ body, html {
   display: grid;
   grid-template-columns: 35% 65%;
   grid-template-rows: 1fr;
-  height: calc(100vh - 110px);
+  flex: 1;
+  min-height: 0;
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -726,7 +735,6 @@ body, html {
   .two-column,
   .two-column.collapsed {
     grid-template-columns: 1fr;
-    height: calc(100vh - 110px);
     position: relative;
     overflow: hidden;
   }
