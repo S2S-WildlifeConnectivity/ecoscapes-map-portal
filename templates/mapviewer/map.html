@@ -185,6 +185,51 @@
             </div>
             <iframe id="map1" class="map-iframe" src=""></iframe>
             <iframe id="map2" class="map-iframe" src=""></iframe>
+            <!-- Hidden preload iframe: warms TCP connections and HTTP cache for upcoming maps -->
+            <iframe id="mapPreload" src="" tabindex="-1" aria-hidden="true" style="display:none;position:absolute;width:0;height:0;border:none;pointer-events:none;"></iframe>
+            <!-- Debug panel (Ctrl+Shift+D to toggle) -->
+            <div id="prefetchDebugPanel" style="display:none;position:fixed;bottom:16px;left:16px;z-index:9999;background:rgba(8,8,8,0.96);color:#ccc;font-family:'Consolas','Monaco',monospace;font-size:11px;line-height:1.65;border-radius:8px;width:370px;border:1px solid rgba(0,255,0,0.18);box-shadow:0 6px 28px rgba(0,0,0,0.7);backdrop-filter:blur(8px);overflow:hidden;pointer-events:auto;">
+              <!-- Header -->
+              <div style="padding:7px 12px;background:rgba(0,255,200,0.06);border-bottom:1px solid rgba(0,255,0,0.15);display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:#0ff;font-weight:bold;letter-spacing:0.08em;font-size:12px;">⚡ MAP DEBUG</span>
+                <span style="color:#444;font-size:10px;">Ctrl+Shift+D to close</span>
+              </div>
+              <!-- Prefetch -->
+              <div style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <div style="color:#555;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:3px;">Prefetch</div>
+                <div>Status: <span id="dbg-status" style="color:#888;">idle</span></div>
+                <div style="display:flex;gap:14px;">
+                  <span>Cache: <span id="dbg-warmed" style="color:#0cf;">0</span></span>
+                  <span>Hover: <span id="dbg-hover" style="color:#888;">no</span></span>
+                </div>
+                <div>Warming: <span id="dbg-url" style="color:#ff0;font-size:10px;">—</span></div>
+                <div>Adj next: <span id="dbg-adj" style="color:#0cf;">—</span></div>
+              </div>
+              <!-- Load timing -->
+              <div style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <div style="color:#555;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:3px;">Load Timing</div>
+                <div>Current: <span id="dbg-load-current" style="color:#888;">—</span></div>
+                <div style="display:flex;gap:14px;">
+                  <span>Avg: <span id="dbg-load-avg" style="color:#0cf;">—</span></span>
+                  <span>Best: <span id="dbg-load-best" style="color:#0f0;">—</span></span>
+                  <span>Worst: <span id="dbg-load-worst" style="color:#f80;">—</span></span>
+                </div>
+                <div style="color:#555;font-size:10px;">History: <span id="dbg-load-history">—</span></div>
+              </div>
+              <!-- Current selection state -->
+              <div style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <div style="color:#555;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:3px;">Selection</div>
+                <div>Theme: <span id="dbg-theme" style="color:#aaa;">—</span></div>
+                <div>Sub-theme: <span id="dbg-subtheme" style="color:#aaa;">—</span></div>
+                <div>Indicator: <span id="dbg-indicator" style="color:#0cf;">—</span></div>
+                <div>Mode: <span id="dbg-mode" style="color:#888;">—</span> &nbsp; Toggle: <span id="dbg-toggle" style="color:#888;">—</span></div>
+              </div>
+              <!-- Event log -->
+              <div style="padding:6px 12px;">
+                <div style="color:#555;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:3px;">Event Log</div>
+                <div id="dbg-log" style="max-height:130px;overflow-y:auto;font-size:10px;color:#555;scrollbar-width:thin;"></div>
+              </div>
+            </div>
             
             <!-- 360° Panorama View Container -->
             <div id="panoramaView" class="panorama-view hidden">
@@ -1430,6 +1475,159 @@ If you continue to experience issues, please refresh the page or contact support
             const map1Iframe = document.getElementById('map1');
             const map2Iframe = document.getElementById('map2');
 
+            // =====================================================================
+            // Map Prefetch System
+            // Three strategies to reduce perceived map load time:
+            //   1. Hover prefetch  — start loading map when user hovers an indicator
+            //   2. Adjacent preload — after a map loads, silently load the next one
+            //   3. Warm-URL fast-path — skip artificial delays for already-warmed URLs
+            // =====================================================================
+            const prefetchIframe = document.getElementById('mapPreload');
+            const warmedUrls = new Set();       // URLs whose sub-resources are in HTTP cache
+            let currentPrefetchUrl = null;      // URL currently loading in prefetchIframe
+            let hoverPrefetchTimer = null;
+            let debugPrefetchVisible = false;
+
+            // Load timing
+            let map1LoadStart = null;
+            const loadHistory = [];             // last 5 load durations in ms
+            const MAX_LOAD_HISTORY = 5;
+
+            // Event log
+            const debugEventLog = [];
+            const MAX_LOG = 18;
+            const dbgT0 = performance.now();
+
+            function dbgLog(msg, colour) {
+                const secs = ((performance.now() - dbgT0) / 1000).toFixed(1);
+                debugEventLog.unshift({ t: `+${secs}s`, msg, colour: colour || '#666' });
+                if (debugEventLog.length > MAX_LOG) debugEventLog.pop();
+                dbgRender();
+            }
+
+            function dbgRender() {
+                if (!debugPrefetchVisible) return;
+
+                // — Prefetch section —
+                const statusEl = document.getElementById('dbg-status');
+                const prefLoaded = currentPrefetchUrl && warmedUrls.has(currentPrefetchUrl);
+                const prefLoading = currentPrefetchUrl && !prefLoaded;
+                statusEl.textContent = prefLoading ? 'loading…' : prefLoaded ? 'ready ✓' : 'idle';
+                statusEl.style.color = prefLoading ? '#ff0' : prefLoaded ? '#0f0' : '#888';
+
+                const urlShort = currentPrefetchUrl
+                    ? decodeURIComponent(currentPrefetchUrl).replace(/\?.*/, '').split('/').slice(-2).join('/')
+                    : '—';
+                document.getElementById('dbg-url').textContent = urlShort;
+                document.getElementById('dbg-warmed').textContent = warmedUrls.size;
+                document.getElementById('dbg-hover').textContent = hoverPrefetchTimer ? 'pending…' : 'no';
+
+                // — Load timing section —
+                const loadCurrentEl = document.getElementById('dbg-load-current');
+                if (map1LoadStart !== null) {
+                    const elapsed = (performance.now() - map1LoadStart) / 1000;
+                    loadCurrentEl.textContent = `${elapsed.toFixed(2)}s (loading…)`;
+                    loadCurrentEl.style.color = '#ff0';
+                } else if (loadHistory.length) {
+                    const last = loadHistory[0];
+                    loadCurrentEl.textContent = `${(last / 1000).toFixed(2)}s`;
+                    loadCurrentEl.style.color = last < 2000 ? '#0f0' : last < 5000 ? '#ff0' : '#f80';
+                } else {
+                    loadCurrentEl.textContent = '—';
+                    loadCurrentEl.style.color = '#888';
+                }
+                if (loadHistory.length) {
+                    const avg = loadHistory.reduce((a, b) => a + b, 0) / loadHistory.length;
+                    const best = Math.min(...loadHistory);
+                    const worst = Math.max(...loadHistory);
+                    document.getElementById('dbg-load-avg').textContent   = `${(avg / 1000).toFixed(2)}s`;
+                    document.getElementById('dbg-load-best').textContent  = `${(best / 1000).toFixed(2)}s`;
+                    document.getElementById('dbg-load-worst').textContent = `${(worst / 1000).toFixed(2)}s`;
+                    document.getElementById('dbg-load-history').textContent =
+                        loadHistory.map(t => `${(t / 1000).toFixed(1)}s`).join('  ·  ');
+                }
+
+                // — Selection section —
+                document.getElementById('dbg-theme').textContent     = currentTheme     ? currentTheme.name      : '—';
+                document.getElementById('dbg-subtheme').textContent  = currentSubtheme  ? currentSubtheme.name   : '—';
+                document.getElementById('dbg-indicator').textContent = currentIndicator ? currentIndicator.title : '—';
+                const modeEl = document.getElementById('dbg-mode');
+                const exploreMode = typeof isExploreMode !== 'undefined' ? isExploreMode : null;
+                modeEl.textContent = exploreMode === null ? '—' : exploreMode ? 'Explore' : 'Analyze';
+                modeEl.style.color = exploreMode ? '#0f0' : '#0cf';
+                const toggleEl = document.getElementById('dbg-toggle');
+                const vmt = document.getElementById('viewModeToggle');
+                toggleEl.textContent = vmt ? (vmt.disabled ? 'disabled' : 'enabled') : '—';
+                toggleEl.style.color = vmt && vmt.disabled ? '#f80' : '#0f0';
+
+                // — Event log —
+                const logEl = document.getElementById('dbg-log');
+                logEl.innerHTML = debugEventLog
+                    .map(e => `<div style="color:${e.colour};border-bottom:1px solid rgba(255,255,255,0.04);padding:1px 0;">` +
+                              `<span style="color:#444;">${e.t}</span> ${e.msg}</div>`)
+                    .join('');
+            }
+
+            // Auto-refresh every 200ms so the elapsed timer ticks while a map loads
+            setInterval(() => { if (debugPrefetchVisible) dbgRender(); }, 200);
+
+            function prefetchMapUrl(url, trigger) {
+                if (!url || url === currentPrefetchUrl) return;
+                currentPrefetchUrl = url;
+                prefetchIframe.onload = () => {
+                    warmedUrls.add(url);
+                    dbgLog(`prefetch ready: ${url.split('/').slice(-2, -1)[0] || url}`, '#0f0');
+                };
+                prefetchIframe.src = url;
+                dbgLog(`prefetch started: ${trigger || url.split('/').slice(-2,-1)[0] || url}`, '#ff0');
+            }
+
+            function scheduleHoverPrefetch(indicator) {
+                clearTimeout(hoverPrefetchTimer);
+                if (!indicator || !indicator.map1_url) return;
+                hoverPrefetchTimer = setTimeout(() => {
+                    hoverPrefetchTimer = null;
+                    const cached = warmedUrls.has(indicator.map1_url);
+                    if (!cached) {
+                        prefetchMapUrl(indicator.map1_url, `hover: ${indicator.title}`);
+                    } else {
+                        dbgLog(`hover: "${indicator.title}" already cached`, '#0cf');
+                    }
+                }, 180);
+                dbgRender(); // update "hover: pending" state immediately
+            }
+
+            function cancelHoverPrefetch() {
+                if (hoverPrefetchTimer) {
+                    clearTimeout(hoverPrefetchTimer);
+                    hoverPrefetchTimer = null;
+                    dbgRender();
+                }
+            }
+
+            function scheduleAdjacentPreload() {
+                if (!currentSubtheme || !currentIndicator) return;
+                const idx = currentSubtheme.indicators.findIndex(i => i.id === currentIndicator.id);
+                const next = currentSubtheme.indicators[idx + 1];
+                document.getElementById('dbg-adj').textContent = next
+                    ? next.title + (warmedUrls.has(next.map1_url) ? ' (cached)' : '') : 'none';
+                if (!next || !next.map1_url || warmedUrls.has(next.map1_url)) return;
+                setTimeout(() => prefetchMapUrl(next.map1_url, `adjacent: ${next.title}`), 700);
+            }
+
+            // Toggle debug panel with Ctrl+Shift+D
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                    debugPrefetchVisible = !debugPrefetchVisible;
+                    document.getElementById('prefetchDebugPanel').style.display =
+                        debugPrefetchVisible ? 'block' : 'none';
+                    if (debugPrefetchVisible) {
+                        dbgLog('panel opened', '#0ff');
+                        dbgRender();
+                    }
+                }
+            });
+
             // Current selections
             let currentTheme = null;
             let currentSubtheme = null;
@@ -1806,6 +2004,9 @@ If you continue to experience issues, please refresh the page or contact support
                             e.stopPropagation();
                             selectIndicator(indicator);
                         });
+                        // Strategy 1: hover prefetch (debounced 180ms)
+                        item.addEventListener('mouseenter', () => scheduleHoverPrefetch(indicator));
+                        item.addEventListener('mouseleave', cancelHoverPrefetch);
                         indicatorMenu.appendChild(item);
                     });
                 }
@@ -1829,6 +2030,7 @@ If you continue to experience issues, please refresh the page or contact support
             // Indicator selected
             function selectIndicator(indicator) {
                 currentIndicator = indicator;
+                dbgLog(`selected: "${indicator.title}"`, '#0cf');
                 
                 // Update indicator button
                 updateButton(indicatorDropdown, indicator.title, indicator.icon.replace('fa-', ''));
@@ -1910,24 +2112,39 @@ If you continue to experience issues, please refresh the page or contact support
                     map1.onload = function() {
                         loadingSpinner.style.display = 'none';
                         map1.style.display = 'block';
+                        // Record load time
+                        if (map1LoadStart !== null) {
+                            const duration = Math.round(performance.now() - map1LoadStart);
+                            loadHistory.unshift(duration);
+                            if (loadHistory.length > MAX_LOAD_HISTORY) loadHistory.pop();
+                            map1LoadStart = null;
+                            dbgLog(`map loaded in ${(duration / 1000).toFixed(2)}s`, duration < 2000 ? '#0f0' : duration < 5000 ? '#ff0' : '#f80');
+                        }
+                        // Strategy 2: after current map loads, preload the adjacent indicator
+                        scheduleAdjacentPreload();
                     };
 
                     // Set up error handling
                     map1.onerror = function() {
                         loadingSpinner.style.display = 'none';
                         mapPlaceholder.style.display = 'flex';
+                        map1LoadStart = null;
+                        dbgLog('map load ERROR', '#f44');
                         console.error('Failed to load map');
                     };
 
-                    // Start loading the map after a small delay to ensure spinner is visible
+                    // Strategy 3: skip artificial delay if URL was already warmed by prefetch
+                    const loadDelay = warmedUrls.has(indicator.map1_url) ? 0 : 50;
                     setTimeout(() => {
+                        map1LoadStart = performance.now();
+                        dbgLog(`loading: "${indicator.title}"${warmedUrls.has(indicator.map1_url) ? ' [cached]' : ''}`, '#aaa');
                         map1.src = indicator.map1_url;
 
                         // Restore map location from URL parameters after map loads
                         setTimeout(() => {
                             restoreMapLocationFromUrl();
                         }, 1000);
-                    }, 50);
+                    }, loadDelay);
 
                     // Set active view to explore
                     const exploreLabel = document.querySelector('.view-label.explore');

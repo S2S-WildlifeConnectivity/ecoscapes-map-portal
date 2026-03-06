@@ -496,15 +496,6 @@
       "map1_url": "https://felt.com/embed/map/Climate-Corridors-KeWI9A47iToi6KTJcHHcWQC?loc=50.117%2C-123.05%2C8.11z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": "https://hsbr.staging.dashboard.terradapt.org/?zoom=7.182937348387647&lng=-123.02354467997856&lat=50.072540661841686&opacity=0.75&selectedOverlay=%22s2s_modelarea%22&overlayId=s2s_modelarea&overlayName=Sea+to+Sky+Model+Area&layerTheme=%22temperature_normals%22&layerScope=%22project%22&layerVisualisation=%22pixel%22&minTimestamp=%221990-01-01T00%3A00%3A00%22&maxTimestamp=%222100-01-01T00%3A00%3A00%22&selectedLayer=%22mat_30yr_normal%22&layerView=%22status%22&layerStart=%221990-01-01T00%3A00%3A00%22&layerEnd=%222100-01-01T00%3A00%3A00%22&currentTimestamp=%222100-01-01T00%3A00%3A00%22"
     },
-    "05-01-01-climate-refugia": {
-      "title": "Climate Refugia",
-      "description": "Areas of the landscape that remain buffered from the most severe effects of climate change, enabling sensitive species to survive locally. They are characterized by stable microclimates, unique hydrological features, or protective topography that provides sanctuary. In the context of biodiversity and landscape ecology, refugia are vital for species survival, acting as \"arks\" that safeguard genetic diversity and ecological communities. They serve as source populations for future re-colonization of the surrounding landscape, thereby supporting ecosystem resilience and function.",
-      "source": "",
-      "unit_of_measure": "",
-      "icon": "icon-climate-change",
-      "map1_url": "",
-      "map2_url": ""
-    },
     "05-02-01-priority-linkages": {
       "title": "Priority Linkages",
       "description": "Modelled pathways of ecological connectivity that provide the most efficient movement corridors for wildlife and gene flow across the widest range of species. These pathways identify areas of least resistance for animals and plants to move between protected areas and other high-value habitats, including core and stepping-stone patches found in fragmented landscapes at lower elevations and in valley bottoms. Mapping these movement corridors helps guide the development of practical conservation solutions that deliver the greatest benefits for vulnerable plants and animals.",
