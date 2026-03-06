@@ -109,8 +109,9 @@
           </div>
         </div>
         <div id="logoContainer" class="logo-container">
-          <img id="logoImageLight" class="logo-light" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Light.png" alt="EcoScapes Logo" style="width: 100%; height: 100%; object-fit: contain; display: block;">
-          <img id="logoImageDark" class="logo-dark" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Dark.png" alt="EcoScapes Logo" style="width: 100%; height: 100%; object-fit: contain; display: none;">
+          <img id="logoImageLight" class="logo-light" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Light.png" alt="EcoScapes Logo" style="width: 100%; height: auto; object-fit: contain; display: block;">
+          <img id="logoImageDark" class="logo-dark" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Dark.png" alt="EcoScapes Logo" style="width: 100%; height: auto; object-fit: contain; display: none;">
+          <span class="logo-version">v0.9.3-PREVIEW</span>
         </div>
       </div>
       <div class="two-column">
@@ -169,6 +170,13 @@
                 <i class="fas fa-map-marked-alt map-marker-icon"></i>
                 <h3>Select a Sub-theme and Indicator</h3>
                 <p>Please choose a sub-theme from the dropdown menu above, then select an indicator to view the map.</p>
+              </div>
+            </div>
+            <div id="mapNoDataPlaceholder" class="map-placeholder" style="display:none;">
+              <div class="placeholder-content">
+                <i class="fas fa-envelope map-marker-icon"></i>
+                <h3>Map Not Yet Available</h3>
+                <p>We don't currently have a map for this indicator. To request data or report an issue, please contact <a href="mailto:ecoscapes@naturesquamish.ca" style="color:var(--primary);">ecoscapes@naturesquamish.ca</a>.</p>
               </div>
             </div>
             <div id="loadingSpinner" class="loading-spinner">
@@ -915,6 +923,8 @@
                 const mapPlaceholder = document.getElementById('mapPlaceholder');
                 if (mapPlaceholder && map1 && map2) {
                     mapPlaceholder.style.display = 'flex';
+                    const _ndp1 = document.getElementById('mapNoDataPlaceholder');
+                    if (_ndp1) _ndp1.style.display = 'none';
                     map1.style.display = 'none';
                     map2.style.display = 'none';
                     map1.src = '';
@@ -1651,9 +1661,11 @@ If you continue to experience issues, please refresh the page or contact support
                 // Reset map display to show placeholder and hide maps
                 if (mapPlaceholder && map1 && map2) {
                     mapPlaceholder.style.display = 'flex';
+                    const _ndp2 = document.getElementById('mapNoDataPlaceholder');
+                    if (_ndp2) _ndp2.style.display = 'none';
                     map1.style.display = 'none';
                     map2.style.display = 'none';
-                    
+
                     // Clear map sources
                     map1.src = '';
                     map2.src = '';
@@ -1721,9 +1733,11 @@ If you continue to experience issues, please refresh the page or contact support
                 
                 // Reset map display to show placeholder and hide maps
                 mapPlaceholder.style.display = 'flex';
+                const _ndp3 = document.getElementById('mapNoDataPlaceholder');
+                if (_ndp3) _ndp3.style.display = 'none';
                 map1.style.display = 'none';
                 map2.style.display = 'none';
-                
+
                 // Clear map sources
                 map1.src = '';
                 map2.src = '';
@@ -1878,65 +1892,117 @@ If you continue to experience issues, please refresh the page or contact support
                 const map2 = document.getElementById('map2');
                 const mapPlaceholder = document.getElementById('mapPlaceholder');
                 
+                const mapNoDataPlaceholder = document.getElementById('mapNoDataPlaceholder');
+
                 if (indicator && indicator.map1_url) {
                     // Get the loading spinner
                     const loadingSpinner = document.getElementById('loadingSpinner');
-                    
-                    // Hide the placeholder and show the loading spinner
+
+                    // Hide placeholders and show the loading spinner
                     mapPlaceholder.style.display = 'none';
+                    mapNoDataPlaceholder.style.display = 'none';
                     loadingSpinner.style.display = 'flex';
-                    
+
                     // Hide any previously shown map
                     map1.style.display = 'none';
-                    
+
                     // Set up map1 with load event to hide spinner and show map
                     map1.onload = function() {
                         loadingSpinner.style.display = 'none';
                         map1.style.display = 'block';
                     };
-                    
+
                     // Set up error handling
                     map1.onerror = function() {
                         loadingSpinner.style.display = 'none';
                         mapPlaceholder.style.display = 'flex';
                         console.error('Failed to load map');
                     };
-                    
+
                     // Start loading the map after a small delay to ensure spinner is visible
                     setTimeout(() => {
                         map1.src = indicator.map1_url;
-                        
+
                         // Restore map location from URL parameters after map loads
                         setTimeout(() => {
                             restoreMapLocationFromUrl();
                         }, 1000);
                     }, 50);
-                    
-                    // Set up map2 if URL exists
-                    if (indicator.map2_url) {
-                        map2.onload = function() {
-                            // Additional map2 loaded logic if needed
-                        };
-                        map2.src = indicator.map2_url;
-                        map2.style.display = 'none'; // Will be shown when toggled
-                    } else {
-                        map2.style.display = 'none';
-                    }
 
-                    // Set active view to explore (with proper null checks)
+                    // Set active view to explore
                     const exploreLabel = document.querySelector('.view-label.explore');
                     const analyzeLabel = document.querySelector('.view-label.analyze');
                     const viewToggle = document.getElementById('viewModeToggle');
-                    
+
                     if (exploreLabel) exploreLabel.classList.add('active');
                     if (analyzeLabel) analyzeLabel.classList.remove('active');
                     if (viewToggle) viewToggle.checked = false;
+                    isExploreMode = true;
                     currentView = 'explore';
+
+                    if (indicator.map2_url) {
+                        // Both URLs — enable toggle and preload map2
+                        viewModeToggle.disabled = false;
+                        viewModeToggle.classList.remove('toggle-disabled');
+                        viewModeToggle.setAttribute('data-tooltip', 'Switch to Analyze Mode');
+                        map2.onload = function() {};
+                        map2.src = indicator.map2_url;
+                        map2.style.display = 'none';
+                    } else {
+                        // Explore only — disable toggle and notify user
+                        map2.src = '';
+                        map2.style.display = 'none';
+                        viewModeToggle.disabled = true;
+                        viewModeToggle.classList.add('toggle-disabled');
+                        toastManager.warning(
+                            `Analyse mode is not available for "${indicator.title}". Only Explore data is provided for this layer.`,
+                            'Analyse Not Available'
+                        );
+                    }
+
+                } else if (indicator && indicator.map2_url) {
+                    // Analyse URL only — load it, lock toggle to analyse, notify user
+                    const loadingSpinner = document.getElementById('loadingSpinner');
+                    mapPlaceholder.style.display = 'none';
+                    mapNoDataPlaceholder.style.display = 'none';
+                    loadingSpinner.style.display = 'flex';
+                    map1.style.display = 'none';
+                    map1.src = '';
+                    map2.style.display = 'none';
+
+                    map2.addEventListener('load', function() {
+                        loadingSpinner.style.display = 'none';
+                        map2.style.display = 'block';
+                    }, { once: true });
+
+                    setTimeout(() => {
+                        map2.src = indicator.map2_url;
+                    }, 50);
+
+                    // Set toggle to analyse and disable it
+                    const toggleIcon = viewModeToggle.querySelector('i');
+                    toggleIcon.className = 'fas fa-binoculars';
+                    viewModeToggle.setAttribute('data-tooltip', 'Explore mode not available');
+                    viewModeToggle.disabled = true;
+                    viewModeToggle.classList.add('toggle-disabled');
+                    isExploreMode = false;
+                    currentView = 'analyze';
+
+                    toastManager.info(
+                        `No Explore data is available for "${indicator.title}". Switched to Analyse mode.`,
+                        'Switched to Analyse'
+                    );
+
                 } else {
-                    // No map URL, show placeholder
-                    mapPlaceholder.style.display = 'flex';
+                    // No maps at all — show holding message and disable toggle
+                    mapPlaceholder.style.display = 'none';
+                    mapNoDataPlaceholder.style.display = 'flex';
                     map1.style.display = 'none';
                     map2.style.display = 'none';
+                    map1.src = '';
+                    map2.src = '';
+                    viewModeToggle.disabled = true;
+                    viewModeToggle.classList.add('toggle-disabled');
                 }
                 
                 // Update URL with current selection

@@ -41,7 +41,7 @@
     {
       "id": "01-biodiversity-conservation",
       "name": "Biodiversity Conservation",
-      "description": "Canada’s 2030 Nature Strategy provides a roadmap to halt and reverse biodiversity loss through a \"whole-of-society\" approach. It emphasizes shifting from isolated protection to integrated, resilient landscapes by conserving 30% of lands and waters and restoring 30% of degraded ecosystems by 2030. On-the-ground implementation prioritizes Indigenous-led conservation and nature-based solutions, such as wetland restoration and broader ecological connectivity networks that link existing protected areas with remaining critical wildlife habitat. Embedding these solutions into local land-use planning enhances ecosystem health and resilience for the benefit both wildlife and people.",
+      "description": "Canada’s 2030 Nature Strategy provides a roadmap to halt and reverse biodiversity loss through a \"whole-of-society\" approach. It emphasizes shifting from isolated protection to integrated, resilient landscapes by conserving 30% of lands and waters and restoring 30% of degraded ecosystems by 2030. On-the-ground implementation prioritizes Indigenous-led conservation and nature-based solutions, such as wetland restoration and broader ecological connectivity networks that link existing protected areas with remaining critical wildlife habitat. Embedding these solutions into local land-use planning enhances ecosystem health and resilience for the benefit of both wildlife and people.",
       "icon": "icon-biodiversity-conservation",
       "subthemes": [
         {
@@ -118,7 +118,7 @@
     {
       "id": "03-in-situ-biodiversity",
       "name": "In Situ Biodiversity",
-      "description": "Measuring biodiversity “in place” involves a combination of direct observation and analytical techniques that assess characteristics of richness (number of speceis), abundance (number of individuals) how evenly these individuals are distributed across the landscape (evenness), and their vulnerability to population declines or local extinction (species risk). Our assessment of in-situ biodiversity for the southern Coast Mountains is based on a curated collection of than 130,000 research-grade observations of plants and animals, and a regional compilation of the ecological communities they are aprt of.",
+      "description": "Measuring biodiversity “in place” involves a combination of direct observation and analytical techniques that assess characteristics of richness (number of species), abundance (number of individuals) how evenly these individuals are distributed across the landscape (evenness), and their vulnerability to population declines or local extinction (species risk). Our assessment of in-situ biodiversity for the southern Coast Mountains is based on a curated collection of than 130,000 research-grade observations of plants and animals, and a regional compilation of the ecological communities they are part of.",
       "icon": "icon-habitat-cores",
       "subthemes": [
         {
@@ -133,7 +133,7 @@
         {
           "id": "03-02-ecological-communities",
           "name": "Ecological Communities",
-          "description": "The Site Level component of BC’s Biogeoclimatic Ecosystem Classification (BEC) is defined by unique combinations of understory vegetation, soil characteristics (e.g., moisture and nutrient content), and physiographic features that influence the structure and composition of ecological communities during successional growth stages following episodes of landscape disturbance. Identifying and mapping the distribution of site-level vegetation is vital for practical conservation planning, as most on-the-ground management decisions, like tree species selection for reforestation or defining specific habitat management strategies, happen at this level",
+          "description": "The Site Level component of BC’s Biogeoclimatic Ecosystem Classification (BEC) is defined by unique combinations of understory vegetation, soil characteristics (e.g., moisture and nutrient content), and physiographic features that influence the structure and composition of ecological communities during successional growth stages following episodes of landscape disturbance. Identifying and mapping the distribution of site-level vegetation is vital for practical conservation planning, as most on-the-ground management decisions, like tree species selection for reforestation or defining specific habitat management strategies, happen at this level.",
           "icon": "icon-site-level-vegetation",
           "indicators": [
             "03-02-01-site-series"
@@ -246,7 +246,7 @@
     },
     "01-01-02-habitat-protection": {
       "title": "Habitat Protection",
-      "description": "Habitat protection is a proactive approach to safeguarding existing natural environments from harm, thereby maintaining ecosystem health and connectivity. It is a proactive approach, emphasized in the Global Biodiversity Framework's Target 3, which calls for protecting at least 30% of land and seas by 2030 to prevent the loss of biodiversity and ecosystem services. Actions that can be taken at local and regional scales include the formal designation of protected areas managed through legislation or Indigenous law, and the designation of Other Effective Conservation Measures (OECMs)",
+      "description": "Habitat protection is a proactive approach to safeguarding existing natural environments from harm, thereby maintaining ecosystem health and connectivity. It is a proactive approach, emphasized in the Global Biodiversity Framework's Target 3, which calls for protecting at least 30% of land and seas by 2030 to prevent the loss of biodiversity and ecosystem services. Actions that can be taken at local and regional scales include the formal designation of protected areas managed through legislation or Indigenous law, and the designation of Other Effective Conservation Measures (OECMs).",
       "source": "<a target=\"_blank\" href=\"https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html\">Canadian Protected and Conserved Database (CPCAD)</a>",
       "unit_of_measure": "IUCN Categories (I to VI, OECMs)",
       "icon": "icon-habitat-protection",
@@ -274,7 +274,7 @@
     "01-01-05-enduring-features": {
       "title": "Enduring Features",
       "description": "Enduring features shape the distribution and composition of terrestrial and inland water ecosystems through landscape characteristics like topography, geology, and hydrology, which influence erosion, soil formation, and nutrient cycling. High geodiversity creates microclimates that act as climate refugia, buffering species from temperature extremes and changing precipitation. Conserving a variety of these ensures long-term ecosystem health, providing safe refugia that enable species to redistribute and persist as the climate changes.",
-      "source": "<a target=\"_blank\" href=\"https://www.linkedin.com/in/gregorykehm/\">Greg Kehm -GKA Geographic Solutions</a>",
+      "source": "<a target=\"_blank\" href=\"https://www.linkedin.com/in/gregorykehm/\">Gregory Kehm, GKA Geographic Solutions Inc.</a>",
       "unit_of_measure": "land facet types",
       "icon": "icon-enduring-features",
       "map1_url": "https://felt.com/embed/map/Enduring-Features-XKxpq2C0R9C6gHCz4XyohrB?loc=50.117%2C-123.056%2C8.11z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
@@ -291,7 +291,7 @@
     },
     "01-02-01-human-footprint": {
       "title": "Human Footprint",
-      "description": "A composite indicator that measures the extent and degree to which human impacts reduce or damage ecosystem health and fragment natural wildland habitats. This includes both the permanent loss of wildland habitat for urban expansion (e.g., environment, roads, energy pipelines, and utility corridors) and shorter-term landscape disturbances caused by agriculture, timber harvesting, and mining. The cumulative impact of increased human activities in these areas results in biodiversity loss and disrupts natural patterns of ecological connectivity.",
+      "description": "A composite indicator that measures the extent and degree to which human impacts reduce or damage ecosystem health and fragment natural wildland habitats. This includes both the permanent loss of wildland habitat for urban expansion (e.g., roads, energy pipelines, and utility corridors) and shorter-term landscape disturbances caused by agriculture, timber harvesting, and mining. The cumulative impact of increased human activities in these areas results in biodiversity loss and disrupts natural patterns of ecological connectivity.",
       "source": "<a target=\"_blank\" href=\"https://terradapt.org/\">TerrAdapt-Cascadia</a>",
       "unit_of_measure": "disturbance potential (0-100)",
       "icon": "icon-human-footprint",
@@ -309,7 +309,7 @@
     },
     "01-02-03-biodiversity-hotspots": {
       "title": "Biodiversity Hotspots",
-      "description": "Regions with anomalously high concentrations of endemic species and ecological communities that are undergoing significant habitat fragmentation and loss of ecosystem health. Hotspots are ranked based on the relative sensitivity of specific ecological communities to environmental stressors and on the uniqueness and rarity of species assemblages that occur within a given area.  This multi-layered approach measures the \"irreplaceability\" of a landscape, allowing conservationists to prioritize habitats where small-scale disturbances could trigger disproportionate, irreversible losses to regional biodiversity.",
+      "description": "Regions with anomalously high concentrations of endemic species and ecological communities that are undergoing significant habitat fragmentation and loss of ecosystem health. Hotspots are ranked based on the relative sensitivity of specific ecological communities to environmental stressors and on the uniqueness and rarity of species assemblages that occur within a given area. This multi-layered approach measures the \"irreplaceability\" of a landscape, allowing conservationists to prioritize habitats where small-scale disturbances could trigger disproportionate, irreversible losses to regional biodiversity.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
       "unit_of_measure": "ecosystem sensitivity (0-100)",
       "icon": "icon-biodiversity-hotspots",
@@ -345,7 +345,7 @@
     },
     "02-02-02-linear-infrastructure": {
       "title": "Linear Infrastructure",
-      "description": "Linear infrastructure features include major and minor road networks that connect settled areas, forest service roads that access backcountry areas used for resource development, railways, and cleared rights-of-way used to maintain power transmission lines and utility pipelines.  Each of these features disrupts the natural flow of processes, habitat use, and wildlife movement across the landscape. Zones of influence are measured based on the potential for direct mortality, behavioural avoidance, and movement barriers for different species.",
+      "description": "Linear infrastructure features include major and minor road networks that connect settled areas, forest service roads that access backcountry areas used for resource development, railways, and cleared rights-of-way used to maintain power transmission lines and utility pipelines. Each of these features disrupts the natural flow of processes, habitat use, and wildlife movement across the landscape. Zones of influence are measured based on the potential for direct mortality, behavioural avoidance, and movement barriers for different species.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
       "unit_of_measure": "level of disturbance (0-100)",
       "icon": "icon-linear-infrastructure",
@@ -354,7 +354,7 @@
     },
     "02-02-03-outdoor-recreation": {
       "title": "Outdoor Recreation",
-      "description": "Non-motorized recreation is often viewed as benign, but ecological evidence suggests otherwise. High-use hiking and mountain biking trails create a \"landscape of fear\" for sensitive species. Animals like the Wolverine and Mountain Goat may perceive humans on trails as predators. This triggers a physiological stress response and flight behaviour, often at high energetic cost. If trail use is high enough, it can lead to the functional abandonment of critical habitat, effectively severing connectivity to these life-sustaining areas.",
+      "description": "Non-motorized recreation is often viewed as benign, but ecological evidence suggests otherwise. High-use hiking and mountain biking trails create a \"landscape of fear\" for sensitive species. Animals like the wolverine and mountain goat may perceive humans on trails as predators. This triggers a physiological stress response and flight behaviour, often at high energetic cost. If trail use is high enough, it can lead to the functional abandonment of critical habitat, effectively severing connectivity to these life-sustaining areas.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
       "unit_of_measure": "level of disturbance (0-100)",
       "icon": "icon-outdoor-recreation",
@@ -435,7 +435,7 @@
     },
     "03-02-01-site-series": {
       "title": "Site Series",
-      "description": "The Site Level component of BC’s Biogeoclimatic Ecosystem Classification (BEC) is defined by unique combinations of understory vegetation, soil characteristics (e.g., moisture and nutrient content), and physiographic features that influence the structure and composition of ecological communities during successional growth stages following episodes of landscape disturbance. Identifying and mapping the distribution of site-level vegetation is vital for practical conservation planning, as most on-the-ground management decisions, like tree species selection for reforestation or defining specific habitat management strategies, happen at this level",
+      "description": "The Site Level component of BC’s Biogeoclimatic Ecosystem Classification (BEC) is defined by unique combinations of understory vegetation, soil characteristics (e.g., moisture and nutrient content), and physiographic features that influence the structure and composition of ecological communities during successional growth stages following episodes of landscape disturbance. Identifying and mapping the distribution of site-level vegetation is vital for practical conservation planning, as most on-the-ground management decisions, like tree species selection for reforestation or defining specific habitat management strategies, happen at this level.",
       "source": "<a target=\"_blank\" href=\"https://catalogue.data.gov.bc.ca/dataset/8fd15e4e-e7b1-4566-81d1-1ff8947bfd46\">BC Terrestrial Ecosystem Information (TEI-2025)</a>",
       "unit_of_measure": "terrestrial ecosystem Type (categorical)",
       "icon": "icon-site-level-vegetation",
@@ -518,7 +518,7 @@
       "title": "Grizzly Bear",
       "description": "Grizzly bears (Ursus arctos horribilis) are powerful omnivores with a distinctive shoulder hump, long claws adapted for digging, and fur that ranges from dark brown to blonde, giving them a “grizzled” appearance. Found in remote mountainous and forested regions of British Columbia, grizzlies are solitary and wide-ranging, with home ranges spanning hundreds of square kilometres. They typically feed on seasonal plants and berries, migrating from low-elevation riparian and valley bottom habitats in the spring to high-elevation alpine meadows and avalanche tracks in the summer. In the fall, they often return to lower elevation riparian networks to feast on salmon and other fish. Winter denning occurs primarily in remote alpine or subalpine environments.",
       "source": "<a target=\"_blank\" href=\"https://terradapt.org/\">TerrAdapt-Cascadia and Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-focal-species",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Grizzly-Bear-9Ch9ARiWIsTz6gP9BOZVvQBMD?loc=50.117%2C-123.029%2C8.11z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -527,7 +527,7 @@
       "title": "Wolverine",
       "description": "Wolverines (Gulo gulo luscus) are muscular, solitary carnivores known for their strength, endurance, and tenacity. With thick dark fur, pale facial masks, and bushy tails, they resemble small bears more than weasels. Wolverines are adapted to cold, snowy environments and can travel vast distances in search of food. They scavenge on large carcasses and hunt small prey. In BC, wolverines are rare and elusive, with populations concentrated in remote mountainous terrain. Their low reproductive rate and sensitivity to disturbance make them vulnerable to human disturbances and habitat fragmentation.",
       "source": "<a target=\"_blank\" href=\"https://terradapt.org/\">TerrAdapt-Cascadia and Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-wolverine",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Wolverine-I4D8TaH4Q6aU7Qu9CAzeVyD?loc=50.117%2C-123.029%2C8.11z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -536,7 +536,7 @@
       "title": "Canada Lynx",
       "description": "Canada lynx (Lynx canadensis) are elusive, long-legged felines with tufted ears, short tails, and thick fur adapted to cold climates. Their oversized paws act like snowshoes, allowing them to hunt effectively in deep snow. Lynx are highly specialized predators of snowshoe hares, and their populations fluctuate in tandem with hare abundance. Solitary and nocturnal, lynx prefer dense coniferous forests with abundant understory and minimal human disturbance. In BC, they are most common in interior plateaus and northern ranges, with scattered individuals in the Sea-to-Sky region.",
       "source": "<a target=\"_blank\" href=\"https://terradapt.org/\">TerrAdapt-Cascadia and Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-canada-lynx",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Canada-Lynx-b2g9Bzmb0RB2xisc89A2WKsB?loc=50.117%2C-123.029%2C8.11z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -545,7 +545,7 @@
       "title": "Pacific Fisher",
       "description": "The Columbian population of the Pacific fisher in southwest British Columbia (Pekania pennanti, pop 5) is a secretive, forest-dwelling carnivore in the weasel family. With sleek chocolate-brown fur, bushy tails, and agile bodies, fishers are expert climbers and hunters. They prefer mature coniferous forests with complex canopy structure and abundant windfall timber, which they use for denning and hunting. Despite their name, fishers prey on squirrels, snowshoe hares, and even porcupines. In BC, Pacific fishers are rare and declining, with fragmented populations in the southern interior and isolated individuals in the Sea-to-Sky region.",
       "source": "<a target=\"_blank\" href=\"https://terradapt.org/\">TerrAdapt-Cascadia and Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-pacific-fisher",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Pacific-Fisher-1eAqPrcgRFCOkSnC882UUB?loc=50.117%2C-123.029%2C8.11z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -554,14 +554,14 @@
       "title": "Black Bear",
       "description": "Black bears (Ursus americanus) are adaptable mammals found throughout British Columbia’s diverse landscapes, from coastal rainforests to alpine slopes. They have a stocky build, short claws, and a keen sense of smell that helps them forage for berries, insects, and fish. Their coat can range in colour from jet black to cinnamon or even creamy white. They play a vital role in maintaining healthy ecosystems by dispersing seeds and recycling nutrients. Unless food is abundant, black bears typically hibernate from November to March. From September, bears enter hyperphagia, during which their calorie intake increases from 5,000 to 20,000 per day.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-black-bear",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Black-Bear-uNZQagx9AT4Os3Rn7Ew9AjZD?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
     },
     "05-04-03-mountain-goat": {
       "title": "Mountain Goat",
-      "description": "Mountain goats (Ursus americanus) are iconic alpine specialists, adapted to life on steep cliffs and rugged terrain. With thick white coats, black horns, and muscular builds, they navigate vertical landscapes with ease. Their split hooves and rough pads provide grip on rock faces, allowing them to escape predators and access high-elevation forage. Found throughout BC’s mountainous regions, mountain goats are sensitive to disturbance and require unobstructed escape terrain. Their seasonal movements follow snowlines and forage availability, often descending in winter and ascending in summer.",
+      "description": "Mountain goats (Oreamnos americanus) are iconic alpine specialists, adapted to life on steep cliffs and rugged terrain. With thick white coats, black horns, and muscular builds, they navigate vertical landscapes with ease. Their split hooves and rough pads provide grip on rock faces, allowing them to escape predators and access high-elevation forage. Found throughout BC’s mountainous regions, mountain goats are sensitive to disturbance and require unobstructed escape terrain. Their seasonal movements follow snowlines and forage availability, often descending in winter and ascending in summer.",
       "source": "<a target=\"_blank\" href=\"https://www.frontiersin.org/journals/environmental-science/articles/10.3389/fenvs.2022.958596/full\">BC Wildlife Service</a>",
       "unit_of_measure": "composite cores and connectivity potential",
       "icon": "icon-mountain-goat",
@@ -572,7 +572,7 @@
       "title": "Hoary Marmot",
       "description": "Hoary marmots (Marmota caligata) are large, social ground squirrels known for their loud whistles, which gave Whistler its name, and communal sunbathing. Their thick silver-grey fur and white muzzle give them a frosted appearance, hence the name “hoary.” Marmots live in colonies and dig extensive burrow systems in alpine meadows, where they forage during the short summer season. They hibernate for up to eight months, relying on fat reserves built during peak forage. In BC, hoary marmots are common in high-elevation habitats, including the Garibaldi and Tantalus ranges.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-hoary-marmot",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Hoary-Marmot-fB4SXj7OT5y9APpLv3haE9BA?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -581,7 +581,7 @@
       "title": "Black-Tailed Deer",
       "description": "Black-tailed deer (Odocoileus hemionus columbianus), also known as mule deer, are browsers adapted to BC’s coastal rainforests. With reddish-brown summer coats and darker winter pelage, they’re named for their distinctive black-tipped tails. These deer are crepuscular, feeding at dawn and dusk, and rely on dense understory for cover. Males grow forked antlers annually, shedding them in late winter. Black-tailed deer are a vital prey species for cougars and wolves and play a key role in shaping forest vegetation through browsing.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-black-tailed-deer",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Black-tailed-Deer-h2YsekcnQuqD9BZxmkNZpqD?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -590,7 +590,7 @@
       "title": "Coyote",
       "description": "Coyotes (Canis latrans) are versatile canids distinguished by their pointed ears, slender muzzle, and bushy, black-tipped tail often held downward while running. They have a grizzled, gray-brown coat that changes with the seasons. Highly adaptable, they thrive in diverse habitats ranging from forests and grasslands to dense urban environments. As a focal species, they function as mesopredators, helping regulate small-mammal populations and serving as generalist indicators of ecosystem connectivity and adaptability in fragmented landscapes.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-coyote",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Coyote-8eOuPKGdT9CqiNHUCuyrlxB?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -599,7 +599,7 @@
       "title": "Douglas's Squirrel",
       "description": "The Douglas’s squirrel (Tamiasciurus douglasii) is a lively, vocal tree squirrel with a rusty brown back, pale belly, bushy tail, and a distinct black side stripe in summer. Known for its rapid movements and sharp chatter, it plays a key role in forest ecosystems by dispersing seeds and spores. These squirrels are active year-round, caching cones and mushrooms around the forest. They prefer mature coniferous forests, especially those dominated by Douglas-fir, hemlock, and pine. Their nests, called dreys, are built in tree cavities or branch forks and lined with moss and bark.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-douglass-squirel",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Douglass-Squirrel-NgesYfdhQwy6fWn4VGKQOD?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -608,7 +608,7 @@
       "title": "Yellow-Pine Chipmunk",
       "description": "The Yellow-pine chipmunk (Neotamias amoenus) is a small, agile rodent with bold facial stripes and a reddish-brown back. Chipmunks are excellent climbers and often forage in shrubs and low trees. They’re active during the day, storing food in cheek pouches and caching seeds for winter. Yellow-pine chipmunks hibernate in colder months, emerging in spring to breed and forage. Their vocalizations include high-pitched chips and trills used for alarm and territory defence.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-yellow-pine-chipmunk",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Yellow-Pine-Chipmunk-qn0xeF4eQ6GP1wYlTsk1lC?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -617,7 +617,7 @@
       "title": "Beaver",
       "description": "The beaver (Castor canadensis) is North America’s largest rodent, easily recognized by its large orange incisors, webbed hind feet, and broad, flat, scaly tail. These semi-aquatic mammals prefer freshwater habitats, such as rivers, streams, and lakes, bordered by abundant trees. Beavers are the quintessential ecosystem engineers and a keystone species; their dam-building fundamentally alters hydrology, creating wetlands that filter water, mitigate droughts, and provide critical habitat for a vast array of other species.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-beaver",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Beaver-kIQsHfkCQoGMlZ2oHdTLXD?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -626,7 +626,7 @@
       "title": "Mink",
       "description": "The American mink (Neovison vison) is a sleek, semi-aquatic weasel characterized by a long, tubular body, dark chocolate-brown fur, and a distinctive white chin patch. They inhabit riparian zones, favouring banks of streams, lakes, and marshes with dense cover. As a focal species, the mink serves as an essential bioindicator of wetland health and water quality. As top-level aquatic predators, they are susceptible to pollutants such as mercury, reflecting the overall condition of their aquatic food webs.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-mink",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Mink-JWhVv9AafRJC9A6OTtoiaOpD?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -635,7 +635,7 @@
       "title": "Northern Red-Legged Frog",
       "description": "Northern red-legged frogs (Rana aurora) are slender, long-legged amphibians with smooth skin and a reddish hue on their hind limbs. Their eyes are positioned slightly forward, and they often have a faint gold wash on their back. These frogs breed early in the year, sometimes while snow still lingers, laying egg masses in cool, still wetlands. After metamorphosis, juveniles disperse into moist forest habitats, where they forage and overwinter under logs or in root channels. They are sensitive to habitat disturbance and require cool, shaded environments to thrive.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-red-legged-frog",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-N-Red-Legged-Frog-Non-breeding-Season-MYZ9Ap3YEQfOiXH9BUPWKcZB?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -644,25 +644,25 @@
       "title": "Western Toad",
       "description": "Western toads (Anaxyrus boreas) are stout amphibians with dry, bumpy skin and a pale stripe running down their back. Unlike frogs, they walk rather than hop, and their parotoid glands behind the eyes secrete mild toxins to deter predators. These toads breed in shallow wetlands and lay long strings of eggs. After metamorphosis, juveniles disperse into upland habitats, often traveling hundreds of meters from breeding sites. Western toads are active from spring to fall and hibernate underground during winter.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-western-toad",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Western-Toad-Breeding-Season-BBUTM682SmeOH8ajV4rlTB?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
     },
     "05-05-05-pacific-tree-frog": {
       "title": "Pacific Tree Frog",
-      "description": "The Pacific Tree frog (Pseudacris regilla) is a tiny, vocal amphibian known for its loud nighttime calls and remarkable colour variation, ranging from green to brown, with a dark eye stripe. They are technically tree frogs and possess toe pads for climbing. These frogs breed in shallow wetlands and temporary pools, laying eggs in clusters attached to vegetation. After metamorphosis, juveniles disperse into upland habitats. Pacific chorus frogs are active from spring through fall and hibernate in leaf litter or underground during winter.",
+      "description": "The Pacific tree frog (Pseudacris regilla) is a tiny, vocal amphibian known for its loud nighttime calls and remarkable colour variation, ranging from green to brown, with a dark eye stripe. They are technically tree frogs and possess toe pads for climbing. These frogs breed in shallow wetlands and temporary pools, laying eggs in clusters attached to vegetation. After metamorphosis, juveniles disperse into upland habitats. Pacific tree frogs are active from spring through fall and hibernate in leaf litter or underground during winter.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-pacific-tree-frog",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Pacific-Tree-Frog-Breeding-Season-xtTxdcpUSpayQRh5xZfIaC?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
     },
     "05-05-06-ensatina-salamander": {
       "title": "Ensatina Salamander",
-      "description": "The Ensatina salamander (Ensatina eschscholtzii) is a small, lungless amphibian with smooth skin and a constricted tail base. Its coloration varies from reddish-brown to orange or gray, often with mottled patterns. Unlike many amphibians, Ensatinas do not have an aquatic larval stage, they hatch directly from eggs laid in moist terrestrial microhabitats. These salamanders breathe through their skin and require cool, damp environments to survive. They are nocturnal and secretive, sheltering under logs, leaf litter, and rocks during the day.",
+      "description": "The Ensatina salamander (Ensatina eschscholtzii) is a small, lungless amphibian with smooth skin and a constricted tail base. Its coloration varies from reddish-brown to orange or gray, often with mottled patterns. Unlike many amphibians, Ensatinas do not have an aquatic larval stage; they hatch directly from eggs laid in moist terrestrial microhabitats. These salamanders breathe through their skin and require cool, damp environments to survive. They are nocturnal and secretive, sheltering under logs, leaf litter, and rocks during the day.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-ensatina-salamander",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Ensatina-Salamander-hB9BY4NtaTU9BiaWdPWZ5FwB?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -671,7 +671,7 @@
       "title": "Northwestern Salamander",
       "description": "The Northwestern salamander (Ambystoma gracile) is a secretive amphibian with smooth brown skin and large parotoid glands behind the eyes. Adults are terrestrial, while larvae and juvenile individuals remain aquatic. They breed in still or slow-moving water, laying egg masses attached to submerged vegetation. After metamorphosis, juveniles disperse into moist forest habitats, often sheltering under logs, leaf litter, or in burrows. These salamanders are long-lived and sensitive to habitat disturbance, especially changes in moisture and temperature.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-northwest-salamander",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Northwest-Salamander-Breeding-Season-j3msob7iT9Cu3mBLd8hMMsB?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -680,7 +680,7 @@
       "title": "Long-Toed Salamander",
       "description": "The long-toed salamander (Ambystoma macrodactylum) is a slender amphibian with a dark body, yellow or olive dorsal stripe, and notably elongated fourth toe on the hind foot. It breeds in shallow ponds and lakes, laying eggs singly or in small clusters attached to submerged vegetation. Larvae are aquatic, while adults are terrestrial and nocturnal, sheltering under logs, rocks, and leaf litter. These salamanders are active in spring and fall, often migrating short distances between breeding and foraging habitats. Their permeable skin makes them highly sensitive to pollutants and moisture loss.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-long-toed-salamander",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Long-Toed-Salamander-Breeding-Season-4BVbmpD9BR7elPJP5n4xxZA?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
@@ -689,16 +689,16 @@
       "title": "Northern Alligator Lizard",
       "description": "Alligator lizards (Elgaria coerulea) are slender, long-bodied reptiles with rough scales and a distinctive fold along each side of the body. Their coloration ranges from olive to brown, with dark bands, and they can drop their tails to escape predators. These lizards are secretive and often found under logs, rocks, or leaf litter. They are active during warm months and hibernate in winter. Alligator lizards give birth to live young rather than laying eggs, a rare trait among reptiles in BC.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-aligator-lizard",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-N-Alligator-Lizard-3rnzid5PSOi5sSPP6wUTiB?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""
     },
     "05-05-10-garter-snake": {
       "title": "Garter Snake",
-      "description": "Garter snakes (Thamnophis sirtalis) are slender, non-venomous reptiles with distinctive longitudinal stripes, typically yellow, green, or blue, running down their dark bodies. Males are considerably smaller than females. They are highly adaptable and often found near water, where they hunt amphibians and small fish. Garter snakes are active during the day and hibernate communally in winter, sometimes in large numbers. They give birth to live young and use their keen sense of smell and tongue-flicking to locate prey. In BC, several subspecies exist, including the common western garter snake and the more aquatic valley garter snake. In the Sea-to-Sky the most frequently seen is the common garter snake",
+      "description": "Garter snakes (Thamnophis sirtalis) are slender, non-venomous reptiles with distinctive longitudinal stripes, typically yellow, green, or blue, running down their dark bodies. Males are considerably smaller than females. They are highly adaptable and often found near water, where they hunt amphibians and small fish. Garter snakes are active during the day and hibernate communally in winter, sometimes in large numbers. They give birth to live young and use their keen sense of smell and tongue-flicking to locate prey. In BC, several subspecies exist, including the common western garter snake and the more aquatic valley garter snake. In the Sea-to-Sky the most frequently seen is the common garter snake.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
-      "unit_of_measure": "habitat suitability, composite cores and conenctivity potential",
+      "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-garter-snake",
       "map1_url": "https://felt.com/embed/map/Habitat-Suitability-Common-Garter-Snake-Active-Season-copy-WJstrX2DTPO1z11EdtC9BIB?loc=50.107%2C-123.063%2C8.14z&legend=1&cooperativeGestures=1&link=1&geolocation=1&zoomControls=1&scaleBar=1",
       "map2_url": ""

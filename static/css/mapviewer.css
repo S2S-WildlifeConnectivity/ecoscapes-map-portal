@@ -249,16 +249,34 @@ body, html {
   /* Inherited from Right Navigation Buttons base styles */
 }
 
+.view-mode-btn:disabled,
+.view-mode-btn.toggle-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .logo-container {
   margin-left: 40px;
   margin-right: 20px;
   height: 62px;
   width: auto;
-  max-width: 115px;
+  max-width: 100px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   cursor: pointer;
+}
+
+.logo-version {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, #888);
+  margin-top: 3px;
+  white-space: nowrap;
 }
 
 .logo-container img {
@@ -767,7 +785,7 @@ body, html {
     margin-left: 20px;
     margin-right: 10px;
     height: 50px;
-    max-width: 90px;
+    max-width: 78px;
   }
 
   .toolbar-top {
