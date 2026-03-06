@@ -4,23 +4,32 @@ from django.conf import settings
 from django.http import JsonResponse, Http404
 from django.shortcuts import render
 
+_map_config_cache = None
+_panorama_config_cache = None
+
 
 def panorama_config(request):
-    config_path = os.path.join(settings.BASE_DIR, 'static', 'assets', '360', 'panorama-config.json')
-    try:
-        with open(config_path, 'r') as f:
-            data = json.load(f)
-        return JsonResponse(data)
-    except FileNotFoundError:
-        return JsonResponse({'pins': []}, status=404)
+    global _panorama_config_cache
+    if _panorama_config_cache is None:
+        config_path = os.path.join(settings.BASE_DIR, 'static', 'assets', '360', 'panorama-config.json')
+        try:
+            with open(config_path, 'r') as f:
+                _panorama_config_cache = json.load(f)
+        except FileNotFoundError:
+            return JsonResponse({'pins': []}, status=404)
+    return JsonResponse(_panorama_config_cache)
+
 
 def load_map_config():
-    config_path = os.path.join(settings.BASE_DIR, 'map_config.json')
-    try:
-        with open(config_path, 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
+    global _map_config_cache
+    if _map_config_cache is None:
+        config_path = os.path.join(settings.BASE_DIR, 'map_config.json')
+        try:
+            with open(config_path, 'r') as f:
+                _map_config_cache = json.load(f)
+        except FileNotFoundError:
+            _map_config_cache = {}
+    return _map_config_cache
 
 
 def map_view(request, page_name='default'):

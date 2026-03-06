@@ -111,7 +111,7 @@
         <div id="logoContainer" class="logo-container">
           <img id="logoImageLight" class="logo-light" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Light.png" alt="EcoScapes Logo" style="width: 100%; height: auto; object-fit: contain; display: block;">
           <img id="logoImageDark" class="logo-dark" src="https://newdev.naturesquamish.ca/wp-content/uploads/2026/02/EcoScapes-Nature-Squamish-Logos-Dark.png" alt="EcoScapes Logo" style="width: 100%; height: auto; object-fit: contain; display: none;">
-          <span class="logo-version">v0.9.3-PREVIEW</span>
+          <span class="logo-version">v0.9.4-PREVIEW</span>
         </div>
       </div>
       <div class="two-column">
@@ -185,8 +185,9 @@
             </div>
             <iframe id="map1" class="map-iframe" src=""></iframe>
             <iframe id="map2" class="map-iframe" src=""></iframe>
-            <!-- Hidden preload iframe: warms TCP connections and HTTP cache for upcoming maps -->
-            <iframe id="mapPreload" src="" tabindex="-1" aria-hidden="true" style="display:none;position:absolute;width:0;height:0;border:none;pointer-events:none;"></iframe>
+            <!-- Preload pool: 2 hidden iframes that retain loaded map content for instant swapping -->
+            <iframe id="preloadSlot0" class="map-iframe" src="" tabindex="-1" aria-hidden="true"></iframe>
+            <iframe id="preloadSlot1" class="map-iframe" src="" tabindex="-1" aria-hidden="true"></iframe>
             <!-- Debug panel (Ctrl+Shift+D to toggle) -->
             <div id="prefetchDebugPanel" style="display:none;position:fixed;bottom:16px;left:16px;z-index:9999;background:rgba(8,8,8,0.96);color:#ccc;font-family:'Consolas','Monaco',monospace;font-size:11px;line-height:1.65;border-radius:8px;width:370px;border:1px solid rgba(0,255,0,0.18);box-shadow:0 6px 28px rgba(0,0,0,0.7);backdrop-filter:blur(8px);overflow:hidden;pointer-events:auto;">
               <!-- Header -->
@@ -224,10 +225,24 @@
                 <div>Indicator: <span id="dbg-indicator" style="color:#0cf;">—</span></div>
                 <div>Mode: <span id="dbg-mode" style="color:#888;">—</span> &nbsp; Toggle: <span id="dbg-toggle" style="color:#888;">—</span></div>
               </div>
+              <!-- Session stats -->
+              <div style="padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <div style="color:#555;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:3px;">Session</div>
+                <div style="display:flex;gap:14px;">
+                  <span>Maps loaded: <span id="dbg-total-loads" style="color:#0cf;">0</span></span>
+                  <span>Pool hit rate: <span id="dbg-hit-rate" style="color:#888;">—</span></span>
+                </div>
+                <div style="display:flex;gap:14px;">
+                  <span>Session time: <span id="dbg-session-time" style="color:#888;">—</span></span>
+                  <span>On this map: <span id="dbg-on-indicator" style="color:#888;">—</span></span>
+                </div>
+                <div>Theme: <span id="dbg-ui-mode" style="color:#888;">—</span> &nbsp; Panorama: <span id="dbg-panorama" style="color:#888;">—</span></div>
+                <div>Progress: <span id="dbg-progress" style="color:#aaa;">—</span></div>
+              </div>
               <!-- Event log -->
               <div style="padding:6px 12px;">
                 <div style="color:#555;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:3px;">Event Log</div>
-                <div id="dbg-log" style="max-height:130px;overflow-y:auto;font-size:10px;color:#555;scrollbar-width:thin;"></div>
+                <div id="dbg-log" style="max-height:100px;overflow-y:auto;font-size:10px;color:#555;scrollbar-width:thin;"></div>
               </div>
             </div>
             
@@ -347,7 +362,7 @@
                 this.toasts = new Map();
             }
             
-            show(message, type = 'info', title = null, duration = 8000) {
+            show(message, type = 'info', title = null, duration = 4000) {
                 const toastId = Date.now();
                 const toast = this.createToast(toastId, title, message, type);
                 
@@ -972,6 +987,8 @@
                     if (_ndp1) _ndp1.style.display = 'none';
                     map1.style.display = 'none';
                     map2.style.display = 'none';
+                    map1.onload = null; map1.onerror = null;
+                    map2.onload = null; map2.onerror = null;
                     map1.src = '';
                     map2.src = '';
                 }
@@ -1381,24 +1398,24 @@ If you continue to experience issues, please refresh the page or contact support
 
             // Handle view mode toggle functionality
             const viewModeToggle = document.getElementById('viewModeToggle');
-            const map1 = document.getElementById('map1');
-            const map2 = document.getElementById('map2');
             let isExploreMode = true;
 
             viewModeToggle.addEventListener('click', function() {
+                // Fresh lookup each time — map1 id may have changed after a pool swap
+                const map1 = document.getElementById('map1');
+                const map2 = document.getElementById('map2');
                 const toggleIcon = viewModeToggle.querySelector('i');
-                
+
                 if (isExploreMode) {
                     // Check if analyze mode is available for current indicator
                     if (currentIndicator && !currentIndicator.map2_url) {
-                        // Show toast notification that analyze mode is not available
                         toastManager.warning(
                             `We do not time series data for "${currentIndicator.title}". Only explore mode is supported.`,
                             'Explore Only Data Layer'
                         );
-                        return; // Don't switch modes
+                        return;
                     }
-                    
+
                     // Switch to analyze mode
                     map1.style.display = 'none';
                     map2.style.display = 'block';
@@ -1472,31 +1489,135 @@ If you continue to experience issues, please refresh the page or contact support
             const indicatorTitle = document.querySelector('.indicator-title');
             const indicatorDescription = document.querySelector('.indicator-description');
             const indicatorIcon = document.querySelector('.indicator-icon i');
-            const map1Iframe = document.getElementById('map1');
-            const map2Iframe = document.getElementById('map2');
+            // =====================================================================
+            // Map Preload Pool
+            // 2 hidden iframes that retain loaded content. When the user picks a map
+            // that is already in the pool, we swap its id to "map1" — instant display,
+            // no reload. All existing getElementById('map1') calls in the rest of the
+            // code automatically pick up the correct element after a swap.
+            //
+            // Loading strategies:
+            //   1. Auto-preload  — first indicator loaded when a subtheme is chosen
+            //   2. Adjacent      — next indicator preloaded after current map finishes
+            //   3. Hover         — debounced 250ms hover loads into a pool slot
+            // =====================================================================
+            const mapPreloadPool = (function () {
+                let _counter = 0;
+                const slots = [];
 
-            // =====================================================================
-            // Map Prefetch System
-            // Three strategies to reduce perceived map load time:
-            //   1. Hover prefetch  — start loading map when user hovers an indicator
-            //   2. Adjacent preload — after a map loads, silently load the next one
-            //   3. Warm-URL fast-path — skip artificial delays for already-warmed URLs
-            // =====================================================================
-            const prefetchIframe = document.getElementById('mapPreload');
-            const warmedUrls = new Set();       // URLs whose sub-resources are in HTTP cache
-            let currentPrefetchUrl = null;      // URL currently loading in prefetchIframe
-            let hoverPrefetchTimer = null;
-            let debugPrefetchVisible = false;
+                function _label(url) { return url.split('/').slice(-2, -1)[0] || '?'; }
+                function _find(url)  { return slots.find(s => s.url === url); }
+                function _lru() {
+                    // Never overwrite a slot that is currently visible to the user
+                    const hidden = slots.filter(s => s.el.style.display === 'none');
+                    const pool   = hidden.length ? hidden : slots; // fallback (shouldn't happen)
+                    return pool.reduce((a, b) => a.ts < b.ts ? a : b);
+                }
+
+                function _startLoad(slot, url) {
+                    slot.el.onload  = null;
+                    slot.el.onerror = null;
+                    slot.url    = url;
+                    slot.loaded = false;
+                    slot.ts     = ++_counter;
+                    const i = slots.indexOf(slot);
+                    slot.el.onload  = () => { slot.loaded = true;  dbgLog(`pool[${i}] ready: ${_label(url)}`, '#0f0'); };
+                    slot.el.onerror = () => { slot.url = null;      dbgLog(`pool[${i}] error`, '#f44'); };
+                    slot.el.src = url;
+                    dbgLog(`pool[${i}] loading: ${_label(url)}`, '#ff0');
+                }
+
+                return {
+                    init() {
+                        slots.push(
+                            { el: document.getElementById('preloadSlot0'), url: null, loaded: false, ts: 0 },
+                            { el: document.getElementById('preloadSlot1'), url: null, loaded: false, ts: 0 }
+                        );
+                    },
+
+                    preload(url) {
+                        if (!url || _find(url)) return;
+                        _startLoad(_lru(), url);
+                    },
+
+                    has(url)      { return !!_find(url); },
+                    isLoaded(url) { const s = _find(url); return !!(s && s.loaded); },
+
+                    // Attempt to make a preloaded URL the visible map1.
+                    // Swaps the slot's id to "map1", recycling the old map1 as a free slot.
+                    // Returns: 'instant' | 'loading' | false (pool miss)
+                    activate(url, { onInstant, onLoaded, onError } = {}) {
+                        const slot = _find(url);
+                        if (!slot) return false;
+
+                        slot.ts = ++_counter;
+
+                        // ID swap
+                        const oldMap1 = document.getElementById('map1');
+                        if (oldMap1 && oldMap1 !== slot.el) {
+                            const slotId = slot.el.id;
+                            slot.el.id = 'map1';
+                            oldMap1.id = slotId;
+                            // Recycle old map1 as a free pool slot
+                            const recycled = slots.find(s => s.el === oldMap1);
+                            if (recycled) {
+                                recycled.el.onload  = null;
+                                recycled.el.onerror = null;
+                                recycled.el.src     = '';
+                                recycled.el.style.display = 'none';
+                                recycled.url    = null;
+                                recycled.loaded = false;
+                                recycled.ts     = 0;
+                            }
+                        }
+
+                        slot.el.style.display = 'block';
+
+                        if (slot.loaded) {
+                            onInstant && onInstant();
+                            return 'instant';
+                        }
+
+                        const origLoad  = slot.el.onload;
+                        const origError = slot.el.onerror;
+                        slot.el.onload  = () => { slot.loaded = true; origLoad  && origLoad();  onLoaded && onLoaded(); };
+                        slot.el.onerror = () => {                      origError && origError(); onError  && onError();  };
+                        return 'loading';
+                    },
+
+                    clear() {
+                        slots.forEach((s, i) => {
+                            s.el.onload = null; s.el.onerror = null;
+                            s.el.src = ''; s.el.style.display = 'none';
+                            s.url = null; s.loaded = false; s.ts = 0;
+                        });
+                        dbgLog('pool cleared', '#888');
+                    },
+
+                    // For debug panel
+                    status() { return slots.map((s, i) => ({ i, url: s.url, loaded: s.loaded })); }
+                };
+            })();
 
             // Load timing
             let map1LoadStart = null;
-            const loadHistory = [];             // last 5 load durations in ms
+            let map2LoadStart = null;
+            const loadHistory = [];
             const MAX_LOAD_HISTORY = 5;
+
+            // Session stats
+            const dbgSessionStart = Date.now();
+            let dbgPoolHits   = 0;
+            let dbgPoolMisses = 0;
+            let dbgTotalLoads = 0;
+            let dbgIndicatorSince = null;
 
             // Event log
             const debugEventLog = [];
             const MAX_LOG = 18;
             const dbgT0 = performance.now();
+            let debugPrefetchVisible = false;
+            let hoverPrefetchTimer = null;
 
             function dbgLog(msg, colour) {
                 const secs = ((performance.now() - dbgT0) / 1000).toFixed(1);
@@ -1508,25 +1629,22 @@ If you continue to experience issues, please refresh the page or contact support
             function dbgRender() {
                 if (!debugPrefetchVisible) return;
 
-                // — Prefetch section —
-                const statusEl = document.getElementById('dbg-status');
-                const prefLoaded = currentPrefetchUrl && warmedUrls.has(currentPrefetchUrl);
-                const prefLoading = currentPrefetchUrl && !prefLoaded;
-                statusEl.textContent = prefLoading ? 'loading…' : prefLoaded ? 'ready ✓' : 'idle';
-                statusEl.style.color = prefLoading ? '#ff0' : prefLoaded ? '#0f0' : '#888';
-
-                const urlShort = currentPrefetchUrl
-                    ? decodeURIComponent(currentPrefetchUrl).replace(/\?.*/, '').split('/').slice(-2).join('/')
-                    : '—';
-                document.getElementById('dbg-url').textContent = urlShort;
-                document.getElementById('dbg-warmed').textContent = warmedUrls.size;
+                const pool = mapPreloadPool.status();
+                const anyLoading = pool.some(s => s.url && !s.loaded);
+                const anyReady   = pool.some(s => s.url && s.loaded);
+                const statusEl   = document.getElementById('dbg-status');
+                statusEl.textContent = anyLoading ? 'loading…' : anyReady ? 'ready ✓' : 'idle';
+                statusEl.style.color = anyLoading ? '#ff0' : anyReady ? '#0f0' : '#888';
+                document.getElementById('dbg-url').textContent =
+                    pool.filter(s => s.url).map(s => `[${s.i}]${s.loaded ? '✓' : '…'} ${s.url.split('/').slice(-2,-1)[0]}`).join('  ') || '—';
+                document.getElementById('dbg-warmed').textContent =
+                    pool.filter(s => s.loaded).length + ' / ' + pool.length;
                 document.getElementById('dbg-hover').textContent = hoverPrefetchTimer ? 'pending…' : 'no';
 
-                // — Load timing section —
                 const loadCurrentEl = document.getElementById('dbg-load-current');
                 if (map1LoadStart !== null) {
-                    const elapsed = (performance.now() - map1LoadStart) / 1000;
-                    loadCurrentEl.textContent = `${elapsed.toFixed(2)}s (loading…)`;
+                    const el = (performance.now() - map1LoadStart) / 1000;
+                    loadCurrentEl.textContent = `${el.toFixed(2)}s (loading…)`;
                     loadCurrentEl.style.color = '#ff0';
                 } else if (loadHistory.length) {
                     const last = loadHistory[0];
@@ -1538,81 +1656,118 @@ If you continue to experience issues, please refresh the page or contact support
                 }
                 if (loadHistory.length) {
                     const avg = loadHistory.reduce((a, b) => a + b, 0) / loadHistory.length;
-                    const best = Math.min(...loadHistory);
-                    const worst = Math.max(...loadHistory);
                     document.getElementById('dbg-load-avg').textContent   = `${(avg / 1000).toFixed(2)}s`;
-                    document.getElementById('dbg-load-best').textContent  = `${(best / 1000).toFixed(2)}s`;
-                    document.getElementById('dbg-load-worst').textContent = `${(worst / 1000).toFixed(2)}s`;
+                    document.getElementById('dbg-load-best').textContent  = `${(Math.min(...loadHistory) / 1000).toFixed(2)}s`;
+                    document.getElementById('dbg-load-worst').textContent = `${(Math.max(...loadHistory) / 1000).toFixed(2)}s`;
                     document.getElementById('dbg-load-history').textContent =
                         loadHistory.map(t => `${(t / 1000).toFixed(1)}s`).join('  ·  ');
                 }
 
-                // — Selection section —
                 document.getElementById('dbg-theme').textContent     = currentTheme     ? currentTheme.name      : '—';
                 document.getElementById('dbg-subtheme').textContent  = currentSubtheme  ? currentSubtheme.name   : '—';
                 document.getElementById('dbg-indicator').textContent = currentIndicator ? currentIndicator.title : '—';
                 const modeEl = document.getElementById('dbg-mode');
-                const exploreMode = typeof isExploreMode !== 'undefined' ? isExploreMode : null;
-                modeEl.textContent = exploreMode === null ? '—' : exploreMode ? 'Explore' : 'Analyze';
-                modeEl.style.color = exploreMode ? '#0f0' : '#0cf';
-                const toggleEl = document.getElementById('dbg-toggle');
+                modeEl.textContent = isExploreMode ? 'Explore' : 'Analyze';
+                modeEl.style.color = isExploreMode ? '#0f0' : '#0cf';
                 const vmt = document.getElementById('viewModeToggle');
-                toggleEl.textContent = vmt ? (vmt.disabled ? 'disabled' : 'enabled') : '—';
+                const toggleEl = document.getElementById('dbg-toggle');
+                toggleEl.textContent = vmt && vmt.disabled ? 'disabled' : 'enabled';
                 toggleEl.style.color = vmt && vmt.disabled ? '#f80' : '#0f0';
 
-                // — Event log —
-                const logEl = document.getElementById('dbg-log');
-                logEl.innerHTML = debugEventLog
+                // Session stats
+                const sessionSecs = Math.floor((Date.now() - dbgSessionStart) / 1000);
+                const sessionMins = Math.floor(sessionSecs / 60);
+                document.getElementById('dbg-session-time').textContent =
+                    sessionMins > 0 ? `${sessionMins}m ${sessionSecs % 60}s` : `${sessionSecs}s`;
+                document.getElementById('dbg-total-loads').textContent = dbgTotalLoads;
+                const hitRateEl = document.getElementById('dbg-hit-rate');
+                if (dbgTotalLoads > 0) {
+                    const pct = Math.round(dbgPoolHits / dbgTotalLoads * 100);
+                    hitRateEl.textContent = `${pct}% (${dbgPoolHits}/${dbgTotalLoads})`;
+                    hitRateEl.style.color = pct >= 50 ? '#0f0' : pct > 0 ? '#ff0' : '#f80';
+                } else {
+                    hitRateEl.textContent = '—';
+                    hitRateEl.style.color = '#888';
+                }
+                const onIndEl = document.getElementById('dbg-on-indicator');
+                if (dbgIndicatorSince) {
+                    const onSecs = Math.floor((Date.now() - dbgIndicatorSince) / 1000);
+                    onIndEl.textContent = onSecs < 60 ? `${onSecs}s` : `${Math.floor(onSecs / 60)}m ${onSecs % 60}s`;
+                } else {
+                    onIndEl.textContent = '—';
+                }
+
+                // UI state
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const uiModeEl = document.getElementById('dbg-ui-mode');
+                uiModeEl.textContent = isDark ? 'Dark' : 'Light';
+                uiModeEl.style.color = isDark ? '#0cf' : '#ff0';
+                const panoEl = document.getElementById('dbg-panorama');
+                panoEl.textContent = isPanoramaMode
+                    ? (currentPanorama ? `360° "${currentPanorama.title}"` : 'Pin map')
+                    : 'off';
+                panoEl.style.color = isPanoramaMode ? '#0f0' : '#555';
+
+                // Progress through subtheme
+                const progressEl = document.getElementById('dbg-progress');
+                if (currentSubtheme && currentIndicator) {
+                    const idx   = currentSubtheme.indicators.findIndex(i => i.id === currentIndicator.id);
+                    const total = currentSubtheme.indicators.length;
+                    const withMaps = currentSubtheme.indicators.filter(i => i.map1_url).length;
+                    progressEl.textContent = `${idx + 1} of ${total} · ${withMaps} have maps`;
+                } else {
+                    progressEl.textContent = '—';
+                }
+
+                document.getElementById('dbg-log').innerHTML = debugEventLog
                     .map(e => `<div style="color:${e.colour};border-bottom:1px solid rgba(255,255,255,0.04);padding:1px 0;">` +
-                              `<span style="color:#444;">${e.t}</span> ${e.msg}</div>`)
+                               `<span style="color:#444;">${e.t}</span> ${e.msg}</div>`)
                     .join('');
             }
 
-            // Auto-refresh every 200ms so the elapsed timer ticks while a map loads
             setInterval(() => { if (debugPrefetchVisible) dbgRender(); }, 200);
-
-            function prefetchMapUrl(url, trigger) {
-                if (!url || url === currentPrefetchUrl) return;
-                currentPrefetchUrl = url;
-                prefetchIframe.onload = () => {
-                    warmedUrls.add(url);
-                    dbgLog(`prefetch ready: ${url.split('/').slice(-2, -1)[0] || url}`, '#0f0');
-                };
-                prefetchIframe.src = url;
-                dbgLog(`prefetch started: ${trigger || url.split('/').slice(-2,-1)[0] || url}`, '#ff0');
-            }
 
             function scheduleHoverPrefetch(indicator) {
                 clearTimeout(hoverPrefetchTimer);
                 if (!indicator || !indicator.map1_url) return;
+                if (map1LoadStart !== null) return; // a map is actively loading — don't add more
                 hoverPrefetchTimer = setTimeout(() => {
                     hoverPrefetchTimer = null;
-                    const cached = warmedUrls.has(indicator.map1_url);
-                    if (!cached) {
-                        prefetchMapUrl(indicator.map1_url, `hover: ${indicator.title}`);
+                    if (mapPreloadPool.isLoaded(indicator.map1_url)) {
+                        dbgLog(`hover: "${indicator.title}" already ready ✓`, '#0cf');
                     } else {
-                        dbgLog(`hover: "${indicator.title}" already cached`, '#0cf');
+                        mapPreloadPool.preload(indicator.map1_url);
                     }
-                }, 180);
-                dbgRender(); // update "hover: pending" state immediately
+                }, 220);
+                dbgRender();
             }
 
             function cancelHoverPrefetch() {
-                if (hoverPrefetchTimer) {
-                    clearTimeout(hoverPrefetchTimer);
-                    hoverPrefetchTimer = null;
-                    dbgRender();
-                }
+                if (hoverPrefetchTimer) { clearTimeout(hoverPrefetchTimer); hoverPrefetchTimer = null; dbgRender(); }
             }
 
             function scheduleAdjacentPreload() {
                 if (!currentSubtheme || !currentIndicator) return;
-                const idx = currentSubtheme.indicators.findIndex(i => i.id === currentIndicator.id);
+                const idx  = currentSubtheme.indicators.findIndex(i => i.id === currentIndicator.id);
                 const next = currentSubtheme.indicators[idx + 1];
-                document.getElementById('dbg-adj').textContent = next
-                    ? next.title + (warmedUrls.has(next.map1_url) ? ' (cached)' : '') : 'none';
-                if (!next || !next.map1_url || warmedUrls.has(next.map1_url)) return;
-                setTimeout(() => prefetchMapUrl(next.map1_url, `adjacent: ${next.title}`), 700);
+                const adjEl = document.getElementById('dbg-adj');
+                if (!next || !next.map1_url) { if (adjEl) adjEl.textContent = 'none'; return; }
+                if (adjEl) adjEl.textContent = next.title + (mapPreloadPool.isLoaded(next.map1_url) ? ' ✓' : '');
+                if (mapPreloadPool.has(next.map1_url)) return;
+                scheduleIdle(() => mapPreloadPool.preload(next.map1_url), 2000);
+            }
+
+            // Initialise pool after DOM is ready
+            mapPreloadPool.init();
+
+            // Schedule work during an idle frame so it doesn't compete with active loading.
+            // Falls back to setTimeout if requestIdleCallback is not available.
+            function scheduleIdle(fn, fallbackDelay) {
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(fn, { timeout: fallbackDelay || 3000 });
+                } else {
+                    setTimeout(fn, fallbackDelay || 1000);
+                }
             }
 
             // Toggle debug panel with Ctrl+Shift+D
@@ -1621,10 +1776,7 @@ If you continue to experience issues, please refresh the page or contact support
                     debugPrefetchVisible = !debugPrefetchVisible;
                     document.getElementById('prefetchDebugPanel').style.display =
                         debugPrefetchVisible ? 'block' : 'none';
-                    if (debugPrefetchVisible) {
-                        dbgLog('panel opened', '#0ff');
-                        dbgRender();
-                    }
+                    if (debugPrefetchVisible) { dbgLog('panel opened', '#0ff'); dbgRender(); }
                 }
             });
 
@@ -1864,7 +2016,9 @@ If you continue to experience issues, please refresh the page or contact support
                     map1.style.display = 'none';
                     map2.style.display = 'none';
 
-                    // Clear map sources
+                    // Clear handlers before clearing src to prevent stale onload firing
+                    map1.onload = null; map1.onerror = null;
+                    map2.onload = null; map2.onerror = null;
                     map1.src = '';
                     map2.src = '';
                 }
@@ -1936,10 +2090,15 @@ If you continue to experience issues, please refresh the page or contact support
                 map1.style.display = 'none';
                 map2.style.display = 'none';
 
-                // Clear map sources
+                // Clear handlers before clearing src to prevent stale onload firing
+                map1.onload = null; map1.onerror = null;
+                map2.onload = null; map2.onerror = null;
                 map1.src = '';
                 map2.src = '';
-                
+
+                // Clear the preload pool — old content is no longer relevant
+                mapPreloadPool.clear();
+
                 // Update current subtheme
                 currentSubtheme = subtheme;
                 
@@ -2004,11 +2163,20 @@ If you continue to experience issues, please refresh the page or contact support
                             e.stopPropagation();
                             selectIndicator(indicator);
                         });
-                        // Strategy 1: hover prefetch (debounced 180ms)
+                        // Hover: debounced 220ms load into pool slot
                         item.addEventListener('mouseenter', () => scheduleHoverPrefetch(indicator));
                         item.addEventListener('mouseleave', cancelHoverPrefetch);
                         indicatorMenu.appendChild(item);
                     });
+
+                    // Auto-preload the first indicator's map when the browser is idle
+                    const firstWithMap = subtheme.indicators.find(ind => ind.map1_url);
+                    if (firstWithMap) {
+                        scheduleIdle(() => {
+                            mapPreloadPool.preload(firstWithMap.map1_url);
+                            dbgLog(`auto-preload first: "${firstWithMap.title}"`, '#0cf');
+                        }, 2000);
+                    }
                 }
                 
                 // Close all dropdowns using the Dropdown class if available
@@ -2030,6 +2198,7 @@ If you continue to experience issues, please refresh the page or contact support
             // Indicator selected
             function selectIndicator(indicator) {
                 currentIndicator = indicator;
+                dbgIndicatorSince = Date.now();
                 dbgLog(`selected: "${indicator.title}"`, '#0cf');
                 
                 // Update indicator button
@@ -2089,85 +2258,129 @@ If you continue to experience issues, please refresh the page or contact support
                     updateThemeInfo(currentTheme);
                 }
                 
-                // Get map elements
-                const map1 = document.getElementById('map1');
+                // Get map elements — do NOT cache map1 here; it may change during pool activation
                 const map2 = document.getElementById('map2');
                 const mapPlaceholder = document.getElementById('mapPlaceholder');
-                
                 const mapNoDataPlaceholder = document.getElementById('mapNoDataPlaceholder');
 
                 if (indicator && indicator.map1_url) {
-                    // Get the loading spinner
                     const loadingSpinner = document.getElementById('loadingSpinner');
+                    const url = indicator.map1_url;
 
-                    // Hide placeholders and show the loading spinner
-                    mapPlaceholder.style.display = 'none';
+                    mapPlaceholder.style.display    = 'none';
                     mapNoDataPlaceholder.style.display = 'none';
-                    loadingSpinner.style.display = 'flex';
 
-                    // Hide any previously shown map
-                    map1.style.display = 'none';
-
-                    // Set up map1 with load event to hide spinner and show map
-                    map1.onload = function() {
-                        loadingSpinner.style.display = 'none';
-                        map1.style.display = 'block';
-                        // Record load time
-                        if (map1LoadStart !== null) {
-                            const duration = Math.round(performance.now() - map1LoadStart);
-                            loadHistory.unshift(duration);
+                    // Shared callbacks used by both pool-hit and pool-miss paths
+                    function _onLoaded(durationMs) {
+                        if (durationMs != null) {
+                            loadHistory.unshift(Math.round(durationMs));
                             if (loadHistory.length > MAX_LOAD_HISTORY) loadHistory.pop();
-                            map1LoadStart = null;
-                            dbgLog(`map loaded in ${(duration / 1000).toFixed(2)}s`, duration < 2000 ? '#0f0' : duration < 5000 ? '#ff0' : '#f80');
+                            dbgLog(`loaded ${(durationMs / 1000).toFixed(2)}s: "${indicator.title}"`,
+                                   durationMs < 2000 ? '#0f0' : durationMs < 5000 ? '#ff0' : '#f80');
                         }
-                        // Strategy 2: after current map loads, preload the adjacent indicator
+                        map1LoadStart = null;
+                        loadingSpinner.style.display = 'none';
+                        // Only make map1 visible if still in explore mode — the user may have
+                        // clicked the toggle while map1 was loading, and we must not override that.
+                        if (isExploreMode) {
+                            document.getElementById('map1').style.display = 'block';
+                        }
                         scheduleAdjacentPreload();
-                    };
-
-                    // Set up error handling
-                    map1.onerror = function() {
+                        // map2 is the lowest priority — start it only after map1 is visible
+                        if (indicator.map2_url) {
+                            scheduleIdle(() => {
+                                map2LoadStart = performance.now();
+                                map2.onload = function() {
+                                    const dur = map2LoadStart !== null ? performance.now() - map2LoadStart : null;
+                                    map2LoadStart = null;
+                                    dbgLog(`map2 loaded${dur != null ? ' ' + (dur / 1000).toFixed(2) + 's' : ''}: "${indicator.title}"`, dur != null && dur < 3000 ? '#0f0' : '#ff0');
+                                };
+                                map2.onerror = function() { map2LoadStart = null; dbgLog('map2 load ERROR', '#f44'); };
+                                map2.src = indicator.map2_url;
+                                dbgLog(`loading map2 (idle): "${indicator.title}"`, '#555');
+                            }, 3000);
+                        }
+                    }
+                    function _onError() {
+                        map1LoadStart = null;
                         loadingSpinner.style.display = 'none';
                         mapPlaceholder.style.display = 'flex';
-                        map1LoadStart = null;
-                        dbgLog('map load ERROR', '#f44');
+                        dbgLog('load ERROR', '#f44');
                         console.error('Failed to load map');
-                    };
+                    }
 
-                    // Strategy 3: skip artificial delay if URL was already warmed by prefetch
-                    const loadDelay = warmedUrls.has(indicator.map1_url) ? 0 : 50;
-                    setTimeout(() => {
+                    // Try pool first — may swap the iframe with id="map1"
+                    const poolResult = mapPreloadPool.activate(url, {
+                        onInstant: () => {
+                            loadingSpinner.style.display = 'none';
+                            dbgLog(`instant (pool hit): "${indicator.title}"`, '#0ff');
+                            scheduleAdjacentPreload();
+                            if (indicator.map2_url) {
+                                scheduleIdle(() => {
+                                    map2LoadStart = performance.now();
+                                    map2.onload = function() {
+                                        const dur = map2LoadStart !== null ? performance.now() - map2LoadStart : null;
+                                        map2LoadStart = null;
+                                        dbgLog(`map2 loaded${dur != null ? ' ' + (dur / 1000).toFixed(2) + 's' : ''}: "${indicator.title}"`, dur != null && dur < 3000 ? '#0f0' : '#ff0');
+                                    };
+                                    map2.onerror = function() { map2LoadStart = null; dbgLog('map2 load ERROR', '#f44'); };
+                                    map2.src = indicator.map2_url;
+                                    dbgLog(`loading map2 (idle): "${indicator.title}"`, '#555');
+                                }, 3000);
+                            }
+                        },
+                        onLoaded: () => _onLoaded(map1LoadStart !== null ? performance.now() - map1LoadStart : null),
+                        onError:  _onError
+                    });
+
+                    if (poolResult === 'instant') {
+                        // Map is already visible — nothing more needed for loading
+                        dbgPoolHits++; dbgTotalLoads++;
+                    } else if (poolResult === 'loading') {
+                        // In pool but still fetching — show spinner until it arrives
+                        loadingSpinner.style.display = 'flex';
                         map1LoadStart = performance.now();
-                        dbgLog(`loading: "${indicator.title}"${warmedUrls.has(indicator.map1_url) ? ' [cached]' : ''}`, '#aaa');
-                        map1.src = indicator.map1_url;
-
-                        // Restore map location from URL parameters after map loads
+                        dbgPoolHits++; dbgTotalLoads++;
+                        dbgLog(`pool hit (loading): "${indicator.title}"`, '#ff0');
+                    } else {
+                        // Pool miss — load directly into map1
+                        dbgPoolMisses++; dbgTotalLoads++;
+                        loadingSpinner.style.display = 'flex';
+                        const m1 = document.getElementById('map1');
+                        m1.style.display = 'none';
+                        m1.onload  = null;
+                        m1.onerror = null;
+                        m1.onload  = () => _onLoaded(map1LoadStart !== null ? performance.now() - map1LoadStart : null);
+                        m1.onerror = _onError;
+                        map1LoadStart = performance.now();
+                        dbgLog(`loading (pool miss): "${indicator.title}"`, '#aaa');
                         setTimeout(() => {
-                            restoreMapLocationFromUrl();
-                        }, 1000);
-                    }, loadDelay);
+                            document.getElementById('map1').src = url;
+                            setTimeout(restoreMapLocationFromUrl, 1000);
+                        }, 50);
+                    }
 
                     // Set active view to explore
                     const exploreLabel = document.querySelector('.view-label.explore');
                     const analyzeLabel = document.querySelector('.view-label.analyze');
-                    const viewToggle = document.getElementById('viewModeToggle');
-
+                    const viewToggle   = document.getElementById('viewModeToggle');
                     if (exploreLabel) exploreLabel.classList.add('active');
                     if (analyzeLabel) analyzeLabel.classList.remove('active');
-                    if (viewToggle) viewToggle.checked = false;
+                    if (viewToggle)   viewToggle.checked = false;
                     isExploreMode = true;
-                    currentView = 'explore';
+                    currentView   = 'explore';
 
                     if (indicator.map2_url) {
-                        // Both URLs — enable toggle and preload map2
                         viewModeToggle.disabled = false;
                         viewModeToggle.classList.remove('toggle-disabled');
                         viewModeToggle.setAttribute('data-tooltip', 'Switch to Analyze Mode');
-                        map2.onload = function() {};
-                        map2.src = indicator.map2_url;
-                        map2.style.display = 'none';
+                        map2.onload = null;
+                        map2.onerror = null;
+                        map2.style.display = 'none'; // src set later via idle callback
                     } else {
-                        // Explore only — disable toggle and notify user
-                        map2.src = '';
+                        map2.onload = null;
+                        map2.onerror = null;
+                        map2.src    = '';
                         map2.style.display = 'none';
                         viewModeToggle.disabled = true;
                         viewModeToggle.classList.add('toggle-disabled');
@@ -2183,16 +2396,41 @@ If you continue to experience issues, please refresh the page or contact support
                     mapPlaceholder.style.display = 'none';
                     mapNoDataPlaceholder.style.display = 'none';
                     loadingSpinner.style.display = 'flex';
-                    map1.style.display = 'none';
-                    map1.src = '';
+                    const m1 = document.getElementById('map1');
+                    m1.style.display = 'none';
                     map2.style.display = 'none';
 
-                    map2.addEventListener('load', function() {
+                    // Null out the stale map1.onload before clearing src — otherwise the
+                    // blank-page load fires the previous indicator's handler, hiding the
+                    // spinner and revealing a blank map1 before map2 has loaded.
+                    m1.onload  = null;
+                    m1.onerror = null;
+                    m1.src     = '';
+                    // Sync pool state — pool may still think a slot is loaded=true
+                    // pointing at the url we just blanked; clear it so activate() won't
+                    // return 'instant' against an empty iframe next time.
+                    mapPreloadPool.clear();
+
+                    // Use property assignment (not addEventListener) so repeated selections
+                    // overwrite the handler rather than accumulating listeners.
+                    map2.onload = function() {
+                        const dur = map2LoadStart !== null ? performance.now() - map2LoadStart : null;
+                        map2LoadStart = null;
                         loadingSpinner.style.display = 'none';
                         map2.style.display = 'block';
-                    }, { once: true });
+                        dbgLog(`map2 loaded${dur != null ? ' ' + (dur / 1000).toFixed(2) + 's' : ''}: "${indicator.title}"`, dur != null && dur < 3000 ? '#0f0' : '#ff0');
+                    };
+                    map2.onerror = function() {
+                        map2LoadStart = null;
+                        loadingSpinner.style.display = 'none';
+                        mapPlaceholder.style.display = 'flex';
+                        dbgLog('map2 load ERROR', '#f44');
+                        console.error('Failed to load map2');
+                    };
 
+                    dbgLog(`loading map2: "${indicator.title}"`, '#aaa');
                     setTimeout(() => {
+                        map2LoadStart = performance.now();
                         map2.src = indicator.map2_url;
                     }, 50);
 
@@ -2214,10 +2452,13 @@ If you continue to experience issues, please refresh the page or contact support
                     // No maps at all — show holding message and disable toggle
                     mapPlaceholder.style.display = 'none';
                     mapNoDataPlaceholder.style.display = 'flex';
-                    map1.style.display = 'none';
-                    map2.style.display = 'none';
-                    map1.src = '';
-                    map2.src = '';
+                    const _nm1 = document.getElementById('map1');
+                    _nm1.onload = null; _nm1.onerror = null;
+                    _nm1.style.display = 'none'; _nm1.src = '';
+                    map2.style.display = 'none'; map2.src = '';
+                    // Keep pool state in sync so a future activate() doesn't fire 'instant'
+                    // against an iframe we just blanked.
+                    mapPreloadPool.clear();
                     viewModeToggle.disabled = true;
                     viewModeToggle.classList.add('toggle-disabled');
                 }
