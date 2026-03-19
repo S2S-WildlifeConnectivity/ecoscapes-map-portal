@@ -200,7 +200,7 @@
         {
           "id": "05-04-forest-and-alpine-specialists",
           "name": "Forest & Alpine Specialists",
-          "description": "Ecological connectivity networks at the watershed scale preserve vital linkages for species moving between forest habitats, from the valley bottom to higher elevations. In the rugged South Coast terrain, these include the Pacific fisher, black bear, mountain goat, hoary marmot, coyote, black-tailed deer, yellow-pine chipmunk, and Douglas’s squirrel. These specialists serve as indicators of mature, high-canopy coniferous forest health and rugged escape terrain, where movement is dictated by \"stealth and slope\" rather than distance. Conservation focuses on protecting remaining mature forest patches and restoring travel corridors to connect isolated populations.",
+          "description": "Ecological connectivity networks at the watershed scale preserve vital linkages for species moving between forest habitats, from the valley bottom to higher elevations. In the rugged South Coast terrain, these include the Pacific fisher, black bear, mountain goat, hoary marmot, coyote, black-tailed deer, yellow-pine chipmunk, and Douglas’s squirrel. These specialists serve as indicators of mature, high-canopy coniferous forest health and rugged escape terrain, where movement is dictated by \"stealth and slope\", the need for cover and certain terrain features, rather than distance. Conservation focuses on protecting remaining mature forest patches and restoring travel corridors to connect isolated populations.",
           "icon": "icon-moderate-range-species",
           "indicators": [
             "05-04-01-pacific-fisher",
@@ -444,7 +444,7 @@
     },
     "03-03-01-vascular-plants": {
       "title": "Vascular Plants",
-      "description": "Vascular plants (Tracheophyta) have specialized tissues for transporting water and nutrients, allowing them to grow taller and more complex than non-vascular plants. They possess true roots, stems, and leaves. Types include trees, shrubs, grasses, flowering plants (angiosperms), and ferns, many of which produce seeds. Their ability to grow larger and access resources (sunlight, water, nutrients) gives them a competitive advantage, making them the dominant group in most terrestrial ecosystems. There are 60 distinct vascular plant species documented in the southwest Coast Mountains.",
+      "description": "Vascular plants (Tracheophyta) have specialized tissues for transporting water and nutrients, allowing them to grow taller and more complex than non-vascular plants. They possess true roots, stems, and leaves. Types include trees, shrubs, grasses, flowering plants (angiosperms), and ferns, many of which produce seeds. Their ability to grow larger and access resources (sunlight, water, nutrients) gives them a competitive advantage, making them the dominant group in most terrestrial ecosystems. There are 60 distinct at-risk vascular plant species documented in the southwest Coast Mountains.",
       "source": "<a target=\"_blank\" href=\"https://www.gbif.org/\">Global Biodiversity Information Facility (GBIF)</a>",
       "unit_of_measure": "taxonomy and threat level",
       "icon": "icon-vascular-plants",
@@ -561,7 +561,7 @@
     },
     "05-04-04-hoary-marmot": {
       "title": "Hoary Marmot",
-      "description": "Hoary marmots (Marmota caligata) are large, social ground squirrels known for their loud whistles, which gave Whistler its name, and communal sunbathing. Their thick silver-grey fur and white muzzle give them a frosted appearance, hence the name “hoary.” Marmots live in colonies and dig extensive burrow systems in alpine meadows, where they forage during the short summer season. They hibernate for up to eight months, relying on fat reserves built during peak forage. In BC, hoary marmots are common in high-elevation habitats, including the Garibaldi and Tantalus ranges.",
+      "description": "Hoary marmots (Marmota caligata) are large, social ground squirrels known for their loud whistles (which gave Whistler its name) and communal sunbathing. Their thick silver-grey fur and white muzzle give them a frosted appearance, hence the name “hoary.” Marmots live in colonies and dig extensive burrow systems in alpine meadows, where they forage during the short summer season. They hibernate for up to eight months, relying on fat reserves built during peak forage. In BC, hoary marmots are common in high-elevation habitats, including the Garibaldi and Tantalus ranges.",
       "source": "<a target=\"_blank\" href=\"https://github.com/S2S-WildlifeConnectivity\">Nature Squamish</a>",
       "unit_of_measure": "habitat suitability, composite cores and connectivity potential",
       "icon": "icon-hoary-marmot",
