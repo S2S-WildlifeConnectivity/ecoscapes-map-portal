@@ -1,76 +1,66 @@
 import json
 import csv
-from collections import OrderedDict
+import re
 
-def load_config(file_path):
-    with open(file_path, 'r') as f:
-        return json.load(f, object_pairs_hook=OrderedDict)
 
-def extract_indicators(config):
-    rows = []
-    
-    # Create a mapping of theme IDs to their display names (without numbers)
-    theme_id_to_name = {}
-    for theme in config['themes']:
-        # Extract theme name without the number prefix
-        theme_name = ' '.join(theme['name'].split(' ')[1:])
-        theme_id_to_name[theme['id']] = theme_name
-    
-    # Create a mapping of indicator IDs to their full data
-    indicator_data = {}
-    for indicator_id, data in config['indicators'].items():
-        # Use the indicator ID as the name to preserve -core and -linkage suffixes
-        # Convert the ID to a more readable format (replace hyphens with spaces and capitalize words)
-        indicator_name = ' '.join(word.capitalize() for word in indicator_id.split('-'))
-        indicator_data[indicator_id] = {
-            'id': indicator_id,  # Store the original ID
-            'name': indicator_name,
-            'description': data.get('description', ''),
-            'icon': data.get('icon', 'fa-leaf'),
-            'posts': data.get('posts', indicator_id),
-            'map1': data.get('map1_url', ''),
-            'map2': data.get('map2_url', '')
-        }
-    
-    # Now go through themes and subthemes to build the CSV
-    for theme in config['themes']:
-        theme_name = ' '.join(theme['name'].split(' ')[1:])
-        
-        for subtheme in theme.get('subthemes', []):
-            subtheme_name = ' '.join(subtheme['name'].split(' ')[1:])
-            
-            for indicator_id in subtheme.get('indicators', []):
-                if indicator_id in indicator_data:
-                    data = indicator_data[indicator_id]
-                    rows.append({
-                        'Theme': theme_name,
-                        'Subtheme': subtheme_name,
-                        'Indicator': data['id'],  # Use the original ID to preserve -core and -linkage
-                        'posttag': data['posts'],
-                        'description': data['description'],
-                        'icon': data['icon'],
-                        'map1': data['map1'],
-                        'map2': data['map2']
-                    })
-    
-    return rows
+def extract_source_parts(source_html):
+    """Extract raw URL and link text from an HTML anchor tag, or return as-is."""
+    if not source_html:
+        return "", ""
+    match = re.search(r'<a[^>]+href="([^"]+)"[^>]*>([^<]+)</a>', source_html)
+    if match:
+        return match.group(1), match.group(2)
+    # Not an anchor tag — treat as plain URL with no custom link text
+    return source_html.strip(), ""
 
-def write_to_csv(rows, output_file):
-    if not rows:
-        return
-        
-    fieldnames = ['Theme', 'Subtheme', 'Indicator', 'posttag', 'description', 'icon', 'map1', 'map2']
-    
-    with open(output_file, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
 
 def main():
-    config = load_config('map_config.json')
-    rows = extract_indicators(config)
-    write_to_csv(rows, 'ecoscapes-export.csv')
-    print("CSV file has been created: ecoscapes-export.csv")
+    input_file = 'map_config.json'
+    output_file = 'ecoscapes-export.csv'
+
+    with open(input_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    fieldnames = [
+        'Theme', 'ThemeInfo', 'Theme Icon',
+        'SubTheme', 'SubthemeInfo', 'SubThemeIcon',
+        'Indicator', 'IndicatorInfo', 'Source', 'LinkText',
+        'UnitOfMeasure', 'posttag', 'IndicatorIcon', 'map1', 'map2'
+    ]
+
+    with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for theme in data.get('themes', []):
+            for subtheme in theme.get('subthemes', []):
+                for indicator_id in subtheme.get('indicators', []):
+                    indicator = data.get('indicators', {}).get(indicator_id, {})
+                    if not indicator:
+                        continue
+
+                    source_url, link_text = extract_source_parts(indicator.get('source', ''))
+
+                    writer.writerow({
+                        'Theme': theme.get('name', ''),
+                        'ThemeInfo': theme.get('description', ''),
+                        'Theme Icon': theme.get('icon', ''),
+                        'SubTheme': subtheme.get('name', ''),
+                        'SubthemeInfo': subtheme.get('description', ''),
+                        'SubThemeIcon': subtheme.get('icon', ''),
+                        'Indicator': indicator.get('title', ''),
+                        'IndicatorInfo': indicator.get('description', ''),
+                        'Source': source_url,
+                        'LinkText': link_text,
+                        'UnitOfMeasure': indicator.get('unit_of_measure', ''),
+                        'posttag': '',
+                        'IndicatorIcon': indicator.get('icon', ''),
+                        'map1': indicator.get('map1_url', ''),
+                        'map2': indicator.get('map2_url', '')
+                    })
+
+    print(f"✅ Export complete: {output_file} created.")
+
 
 if __name__ == "__main__":
     main()
